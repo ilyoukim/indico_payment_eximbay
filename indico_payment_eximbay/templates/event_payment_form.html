@@ -1,11 +1,17 @@
-Clicking on the <strong>{% trans %}Pay Now{% endtrans %}</strong> button you will get redirected to the Eximbay site in order to complete your transaction.<br>
-**Please note that the billing descriptor will be listed as <u>EXIMBAY.COM</u>.
+{% trans %}
+    Clicking on the <strong>{% trans %}Pay Now{% endtrans %}</strong> button you will get redirected to the Eximbay site in order to complete your transaction.<br>
+    **Please note that the billing descriptor will be listed as <u>EXIMBAY.COM</u>.
+{% endtrans %}
 
 <dl class="i-data-list">
-    <dt>{% trans %}Reference ID{% endtrans %}</dt> <dd>{{ registration.friendly_id }}</dd>
-    <dt>{% trans %}First name{% endtrans %}</dt> <dd>{{ registration.first_name }}</dd>
-    <dt>{% trans %}Last name{% endtrans %}</dt> <dd>{{ registration.last_name }}</dd>
-    <dt>{% trans %}Total amount{% endtrans %}</dt> <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
+    <dt>{% trans %}Reference ID{% endtrans %}</dt>
+        <dd>{{ registration.friendly_id }}</dd>
+    <dt>{% trans %}First name{% endtrans %}</dt>
+        <dd>{{ registration.first_name }}</dd>
+    <dt>{% trans %}Last name{% endtrans %}</dt>
+        <dd>{{ registration.last_name }}</dd>
+    <dt>{% trans %}Total amount{% endtrans %}</dt>
+        <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <dt></dt>
     <dd>
         <form action="{{ payment_url }}" method="POST">
