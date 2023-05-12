@@ -1,7 +1,7 @@
 """
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-``indico_payment_eximbay`` - EXIM EPayment Plugin for Indico
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+``indico_payment_eximbay`` - EXIMBAY EPayment Plugin for Indico
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 .. image:: https://readthedocs.org/projects/indico_payment_eximbay/badge/?version=latest
     :target: http://indico-eximbay.readthedocs.io/en/latest/?badge=latest
@@ -49,7 +49,7 @@ __summary__ = 'Indico EPayment Plugin for Eximbay services'
 # __url__ = 'https://github.com/xxx/indico_payment_eximbay'
 __url__ = ''
 
-__version__ = '1.0.0'
+__version__ = '3.0.0'
 __author__ = 'Gyujin Kim'
 __email__ = 'ilyoukim@postech.ac.kr'
-__copyright__ = '2019 - 2020 %s' % __author__
+__copyright__ = '2019 - 2023 %s' % __author__
