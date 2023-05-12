@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2020 Gyujin Kim
+## Copyright (C) 2019 - 2023 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -18,22 +18,20 @@
 """
 Definition of callbacks exposed by the Indico server
 """
-from __future__ import unicode_literals
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from .request_handlers import EximbayResponseHandler, \
-        EximbayCancelHandler, EximbayFailureHandler, EximbaySuccessHandler
+from indico_payment_eximbay.controllers import (RHInitEximbayPayment, EximbayNotificationHandler, UserCancelHandler,
+                                               UserFailureHandler, UserSuccessHandler)
 
 
-#: url mount points exposing callbacks
 blueprint = IndicoPluginBlueprint(
     'payment_eximbay', __name__,
-    url_prefix='/event/<confId>/registrations/<int:reg_form_id>/payment/response/eximbay'
+    url_prefix='/event/<int:event_id>/registrations/<int:reg_form_id>/payment/eximbay'
 )
 
-# blueprint.add_url_rule('/failure', 'failure', EximbayCancelHandler, methods=('GET', 'POST'))
-# blueprint.add_url_rule('/cancel', 'cancel', EximbayFailureHandler, methods=('GET', 'POST'))
-blueprint.add_url_rule('/success', 'success', EximbaySuccessHandler, methods=('GET', 'POST'))
-# Used by Eximbay to send an asynchronous notification for the transaction
-blueprint.add_url_rule('/ipn', 'notify', EximbayResponseHandler, methods=('POST',))
+blueprint.add_url_rule('/init', 'init', RHInitEximbayPayment, methods=('GET', 'POST'))
+# blueprint.add_url_rule('/failure', 'failure', UserCancelHandler, methods=('GET', 'POST'))
+# blueprint.add_url_rule('/cancel', 'cancel', UserFailureHandler, methods=('GET', 'POST'))
+blueprint.add_url_rule('/success', 'success', UserSuccessHandler, methods=('GET', 'POST'))
+blueprint.add_url_rule('/notify', 'notify', EximbayNotificationHandler, methods=('POST',))
