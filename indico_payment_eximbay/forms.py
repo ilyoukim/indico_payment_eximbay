@@ -87,14 +87,6 @@ class FormatField:
         return True
 
 
-# PaymentPluginSettingsFormBase from indico.modules.events.payment
-# - A codified Form for users to fill in. The *class attributes* define
-#   which fields exist, their shape, description, etc.
-# - Each field is a type from wtforms.fields.core.Field. You probably want to have:
-#   - label: Name of the field, an internationalised identifier
-#   - validators: Input validation, see wtforms.validators
-#   - description: help text of the field, an internationalised text
-
 class PluginSettingsForm(PaymentPluginSettingsFormBase):
     """Configuration form for the Plugin across all events."""
 
@@ -126,6 +118,17 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Event managers will be able to override this.'
         )
     )
+    language = StringField(
+        label=_('Display Language'),
+        validators=[
+            Optional(),
+            IndicoRegexp(r'[A-Z]{0,2}', message='KR or EN')
+        ],
+        description=_(
+            'Default Eximbay payment display language. '
+            'KR or EN'
+        )
+    )
     order_description = StringField(
         label=_('Order Description'),
         validators=[DataRequired(), FormatField(max_length=80)],
@@ -144,15 +147,6 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Event managers will be able to override this. '
             'Supported placeholders: {}'
         ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
-    )
-    notification_mail = StringField(
-        label=_('Notification Email'),
-        validators=[Optional(), Email(), Length(0, 50)],
-        description=_(
-            'Email address to receive notifications of transactions. '
-            "This is independent of Indico's own payment notifications. "
-            'Event managers will be able to override this.'
-        )
     )
 
 
@@ -185,6 +179,17 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
         )
     )
+    language = StringField(
+        label=_('Display Language'),
+        validators=[
+            DataRequired(),
+            IndicoRegexp(r'[A-Z]{2,2}', message='KR or EN')
+        ],
+        description=_(
+            'Default Eximbay payment display language. '
+            'KR or EN'
+        )
+    )
     order_description = StringField(
         label=_('Order Description'),
         validators=[DataRequired(), FormatField(max_length=80)],
@@ -201,12 +206,4 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             'The default identifier of each order for further processing. '
             'Supported placeholders: {}'
         ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
-    )
-    notification_mail = StringField(
-        label=_('Notification Email'),
-        validators=[DataRequired(), Email(), Length(0, 50)],
-        description=_(
-            'Email address to receive notifications of transactions. '
-            "This is independent of Indico's own payment notifications."
-        )
     )
