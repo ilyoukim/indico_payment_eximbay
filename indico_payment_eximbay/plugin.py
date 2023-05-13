@@ -49,8 +49,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_id': None,
         'account_securitykey': None,
         'language': 'EN',
-        'order_description': '{event_title}, {registration_title}, {user_name}',
-        'order_identifier': 'e{event_id}r{registration_id}_u{eventuser_id}',
+        'order_description': '{event_title}, {regform_title}, {user_name}',
+        'order_identifier': 'e{event_id}r{registration_id}u{user_id}',
     }
     #: per event default settings - use the global settings
     default_event_settings = {
