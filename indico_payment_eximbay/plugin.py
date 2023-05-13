@@ -48,9 +48,9 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
+        'language': 'EN',
         'order_description': '{event_title}, {registration_title}, {user_name}',
         'order_identifier': 'e{event_id}r{registration_id}_u{eventuser_id}',
-        'notification_mail': None
     }
     #: per event default settings - use the global settings
     default_event_settings = {
@@ -59,9 +59,9 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
+        'language': 'EN',
         'order_description': None,
         'order_identifier': None,
-        'notification_mail': None
     }
     
     @property
