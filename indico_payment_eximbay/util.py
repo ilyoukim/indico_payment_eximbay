@@ -27,10 +27,8 @@ from indico_payment_eximbay import _
 
 # Eximbay API details
 EXIMBAY_API_SPEC = '2.3'
-# EXIMBAY_PP_INIT_URL = 'Payment/v1/PaymentPage/Initialize'
-# EXIMBAY_PP_ASSERT_URL = 'Payment/v1/PaymentPage/Assert'
-# EXIMBAY_PP_CAPTURE_URL = 'Payment/v1/Transaction/Capture'
-# EXIMBAY_PP_CANCEL_URL = 'Payment/v1/Transaction/Cancel'
+EXIMBAY_PP_BASIC_URL = '/Gateway/BasicProcessor.krp'
+EXIMBAY_PP_DIRECT_URL = '/Gateway/DirectProcessor.krp'
 
 # payment provider identifier
 PROVIDER_EXIMBAY = 'eximbay'
