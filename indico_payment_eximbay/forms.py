@@ -126,7 +126,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         ],
         description=_(
             'Default Eximbay payment display language. '
-            'KR or EN'
+            'Supported: EN or KR'
         )
     )
     order_description = StringField(
@@ -186,8 +186,8 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             IndicoRegexp(r'[A-Z]{2,2}', message='KR or EN')
         ],
         description=_(
-            'Default Eximbay payment display language. '
-            'KR or EN'
+            'Eximbay payment display language. '
+            'Supported: EN or KR'
         )
     )
     order_description = StringField(
