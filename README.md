@@ -12,3 +12,13 @@ they are automatically sent back to Indico.
 
 - Initial release for Indico 3.2
 
+
+## Development test information
+- url : https://secureapi.test.eximbay.com
+- mid : 1849705C64
+- secretkey : 289F40E6640124B2628640168C3C5464
+- credit card
+    - Card Type : VISA
+    - Card No : 4111 1111 1111 1111
+    - Expiry Date : 12/20
+    - CVV : 123
