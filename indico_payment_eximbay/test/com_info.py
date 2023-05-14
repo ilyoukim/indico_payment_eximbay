@@ -1,6 +1,6 @@
 
 
-##return message
+##return message : Eximbay --> Indico server
 post = {
     "ver": "230",
     "txntype": "PAYMENT",
