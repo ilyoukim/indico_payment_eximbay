@@ -39,8 +39,7 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay import _
 from indico_payment_eximbay.plugin import EximbayPaymentPlugin
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_BASIC_URL, EXIMBAY_PP_DIRECT_URL,
-                                         get_request_header, get_terminal_id, get_fgkey)
+from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_BASIC_URL, EXIMBAY_PP_DIRECT_URL, get_fgkey)
 
 
 class TransactionFailure(Exception):
@@ -55,145 +54,24 @@ class TransactionFailure(Exception):
         self.details = details
 
 
-class RHEximbayBase(RH):
-    """
-    Request Handler for asynchronous callbacks from Eximbay
-
-    These handlers are used either by
-
-    - the user, when he is redirected from Eximbay back to Indico
-    - Eximbay, when it sends back the result of a transaction
-    """
+class RHEximbayIPN(RH):
+    """Handler for notification from Eximbay service"""
 
     CSRF_ENABLED = False
 
     def _process_args(self):
-        self.registration = Registration.query.filter_by(uuid=request.args['token']).first()
+        self.token = request.args['token']
+        self.registration = Registration.query.filter_by(uuid=self.token).first()
         if not self.registration:
             raise BadRequest
-        try:
-            self.token = self.registration.transaction.data['Init_PP_response']['Token']
-        except KeyError:
-            # if the transaction was already recorded as successful via background notification,
-            # we no longer have a token in the local transaction
-            self.token = None
-
-
-class RHInitEximbayPayment(RHPaymentBase):
-    def _get_transaction_parameters(self):
-        """Get parameters for creating a transaction request."""
-        settings = EximbayPaymentPlugin.event_settings.get_all(self.event)
-        
-        # security Key is not accurate
-        if len(settings['account_securitykey']) < 20:
-            raise KeyError
-        
-        format_map = {
-            'user_id': self.registration.user_id,
-            'user_name': self.registration.full_name,
-            'user_firstname': self.registration.first_name,
-            'user_lastname': self.registration.last_name,
-            'frendly_id': self.registration.friendly_id,
-            'event_id': self.registration.event_id,
-            'event_title': self.registration.event.title,
-            'registration_id': self.registration.id,
-            'regform_title': self.registration.registration_form.title
-        }
-        order_description = settings['order_description'].format(**format_map)
-        order_identifier = settings['order_identifier'].format(**format_map)
-        
-        # see the Eximbay Manual on what these things mean
-        # where to asynchronously call back from Eximbay
-        transaction_data = {
-            'ver': '230',
-            'txntype': 'PAYMENT',
-            'charset': 'UTF-8',
-            'ostype': 'P',                      # P:pc, M:mobile
-            'displaytype': 'P',                 # P:popup, R:page redirect
-            'paymethod': 'P000',                # Credit Card
-            'mid': settings['account_id'],
-            'lang': settings['language'],       # KR, EN, CN, JP
-            'ref': order_identifier,            # orderId : unique value
-            'amt': self.registration.price,
-            'cur': self.registration.currency,
-            'buyer': self.registration.full_name,
-            'email': self.registration.email,
-            'item_0_product': order_description,
-            'item_0_unitPrice': self.registration.price,
-            'item_0_quantity': '1',
-            'returnurl': url_for_plugin('payment_eximbay.success', self.registration.locator.uuid, _external=True),
-            'statusurl': url_for_plugin('payment_eximbay.notify', self.registration.locator.uuid, _external=True),
-        }
-        
-        transaction_data['fgkey'] = get_fgkey(settings['account_securitykey'], transaction_data)
-        
-        # transaction_parameters = {
-        #     'RequestHeader': EXIMBAY_PP_BASIC_URL,
-        #     'TerminalId': get_terminal_id(settings['account_id']),
-        #     'Payment': eximdata,
-        #     # callbacks of the transaction - where to announce success etc., when redircting the user
-        #     'ReturnUrls': {
-        #         'Success': url_for_plugin('payment_sixpay.success', self.registration.locator.uuid, _external=True),
-        #         # 'Fail': url_for_plugin('payment_sixpay.failure', self.registration.locator.uuid, _external=True),
-        #         # 'Abort': url_for_plugin('payment_sixpay.cancel', self.registration.locator.uuid, _external=True)
-        #     },
-        #     'Notification': {
-        #         # where to asynchronously call back from SIXPay
-        #         'NotifyUrl': url_for_plugin('payment_sixpay.notify', self.registration.locator.uuid, _external=True)
-        #     }
-        # }
-        
-        # return transaction_parameters
-        return transaction_data
-
-    def _init_payment_page(self, transaction_data):
-        """Initialize payment page."""
-        endpoint = urljoin(EximbayPaymentPlugin.settings.get('url'), EXIMBAY_PP_BASIC_URL)
-        resp = requests.post(url=endpoint, data=transaction_data, timeout=5)
-        try:
-            resp.raise_for_status()
-        except RequestException as exc:
-            EximbayPaymentPlugin.logger.error('Could not initialize payment: %s', exc.response.text)
-            raise Exception('Could not initialize payment')
-        return resp
-
-    def _process_args(self):
-        RHPaymentBase._process_args(self)
-        if 'eximbay' not in get_active_payment_plugins(self.event):
-            raise NotFound
-        if not EximbayPaymentPlugin.instance.supports_currency(self.registration.currency):
-            raise BadRequest
-
-    def _process(self):
-        transaction_params = self._get_transaction_parameters()
-        init_response = self._init_payment_page(transaction_params)
-        # payment_url = init_response['RedirectUrl']
-
-        # create pending transaction and store Saferpay transaction token
-        new_indico_txn = register_transaction(
-            registration = self.registration,
-            amount = self.registration.price,
-            currency = self.registration.currency,
-            action = TransactionAction.pending,
-            provider = PROVIDER_EXIMBAY,
-            data = {'Init_PP_response': init_response}
-        )
-        if not new_indico_txn:
-            # set it on the current transaction if we could not create a next one
-            # this happens if we already have a pending transaction and it's incredibly
-            # ugly...
-            self.registration.transaction.data = {'Init_PP_response': init_response}
-        # return redirect(payment_url)
-
-
-
-class RHEximbayIPN(RHEximbayBase):
-    """Handler for notification from Eximbay service"""
 
     def _process(self):
         """process the reply from Eximbay about the transaction."""
-        if self.token is not None:
-            self._process_confirmation()
+        # if self.token is not None:
+        #     self._process_confirmation()
+        
+        flash(_('You cancelled the payment process.'), 'info')
+        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
     def _process_confirmation(self):
         """Process the confirmation response inside indico."""
@@ -212,6 +90,7 @@ class RHEximbayIPN(RHEximbayBase):
         except TransactionFailure as err:
             EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
             raise
+    
     
     def _assert_payment(self):
         """Check the status of the transaction with Eximbay.
@@ -255,6 +134,36 @@ class RHEximbayIPN(RHEximbayBase):
         """
         return request.form
     
+    def _perform_request(self, endpoint, **kwargs):
+        """
+        Helper for performing a request against Eximbay
+
+        :param task: description of the request, used for error handling
+        :type task: basestring
+        :param endpoint: the URL endpoint *relative* to the Eximbay base URL
+        :type endpoint: basestring
+        :param **kwargs: kwargs passed during the request
+
+        This will automatically raise any HTTP errors encountered during the request.
+        If the request itself fails, a :py:exc:`~.TransactionFailure` is raised for ``task``.
+        """
+        data = {
+            'ver': '230',
+            'txntype': 'QUERY',
+            'charset': 'UTF-8',
+            'mid': self.eximbay_account
+        }
+        data.update(kwargs)
+        data['fgkey'] = get_fgkey(self.eximbay_securitykey, data)
+        
+        request_url = urljoin(self.eximbay_url, endpoint)
+        try:
+            response = requests.post(url=request_url, data=data, timeout=5)
+            response.raise_for_status()
+        except request.RequestException as e:
+            raise RuntimeError("request error : %r" % (e.respone))
+        return response
+
     def _verify_signature(self, data):
         """Verify the transaction data and signature with Eximbay
         
@@ -314,7 +223,14 @@ class RHEximbayIPN(RHEximbayBase):
         data.update(completion_data)
         data['fgkey'] = get_fgkey(settings['account_securitykey'], data)
         
-        response = self._perform_request('confirm', EXIMBAY_PP_DIRECT_URL, data)
+        request_url = urljoin(self.eximbay_url, EXIMBAY_PP_DIRECT_URL)
+        request_url = 'http://127.0.0.1:5000/quarks'
+        try:
+            response = requests.post(url=request_url, data=data, timeout=5)
+            response.raise_for_status()
+        except request.RequestException as e:
+            raise RuntimeError("request error : %r" % (e.respone))
+        
         try:
             res = dict(parse_qsl(urlsplit(response.text).path))
             if not res['rescode'] == '0000':
@@ -360,46 +276,9 @@ class RHEximbayIPN(RHEximbayBase):
         )
 
 
-class UserCancelHandler(RHEximbayBase):
-    """User Message on cancelled payment"""
+class RHEximbayReturn(RHEximbayIPN):
+    """Confirmation message after successful payment"""
+
     def _process(self):
-        register_transaction(
-            registration = self.registration,
-            amount = self.registration.transaction.amount,
-            currency = self.registration.transaction.currency,
-            # XXX: this is indeed reject and not cancel (cancel is "mark as unpaid" and
-            # only used for manual transactions)
-            action = TransactionAction.reject,
-            provider=PROVIDER_EXIMBAY,
-        )
-        flash(_('You cancelled the payment.'), 'info')
-        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
-
-
-class UserFailureHandler(RHEximbayBase):
-    """User Message on failed payment"""
-    def _process(self):
-        register_transaction(
-            registration = self.registration,
-            amount = self.registration.transaction.amount,
-            currency = self.registration.transaction.currency,
-            action = TransactionAction.reject,
-            provider=PROVIDER_EXIMBAY,
-        )
-        flash(_('Your payment has failed.'), 'info')
-        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
-
-
-class UserSuccessHandler(RHEximbayIPN):
-    """User redirect target in case of successful payment."""
-    
-    def _process(self):
-        try:
-            if self.token is not None:
-                self._process_confirmation()
-        except TransactionFailure as err:
-            # EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s" % (err.step, err.details))
-            flash(_('Your payment could not be confirmed. Please contact an organizer.'), 'info')
-        else:
-            flash(_('Your payment has been confirmed.'), 'success')
+        flash(_('Your payment request has been processed.'), 'success')
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
