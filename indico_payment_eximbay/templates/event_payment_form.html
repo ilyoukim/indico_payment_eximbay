@@ -1,11 +1,9 @@
 {% trans %}
-    Clicking on the <strong>Pay Now</strong> button you will get redirected to the Eximbay site in order to complete your transaction.<br>
+    Clicking on the <strong>Pay Now</strong> button you will get redirected to the Eximbay site in order to complete your transaction.</br>
     **Please note that the billing descriptor will be listed as <u>EXIMBAY.COM</u>.
 {% endtrans %}
 
 <dl class="i-data-list">
-    <dt>{% trans %}Reference ID{% endtrans %}</dt>
-    <dd>{{ registration.friendly_id }}</dd>
     <dt>{% trans %}First name{% endtrans %}</dt>
     <dd>{{ registration.first_name }}</dd>
     <dt>{% trans %}Last name{% endtrans %}</dt>
@@ -20,9 +18,9 @@
             <input type="hidden" name="charset" value="{{ eximbay.charset }}">
             <input type="hidden" name="ostype" value="{{ eximbay.ostype }}">
             <input type="hidden" name="displaytype" value="{{ eximbay.displaytype }}">
-            <input type="hidden" name="lang" value="{{ eximbay.lang }}">
             <input type="hidden" name="paymethod" value="{{ eximbay.paymethod }}">
             <input type="hidden" name="mid" value="{{ eximbay.mid }}">
+            <input type="hidden" name="lang" value="{{ eximbay.lang }}">
             <input type="hidden" name="ref" value="{{ eximbay.ref }}">
             <input type="hidden" name="amt" value="{{ eximbay.amt }}">
             <input type="hidden" name="cur" value="{{ eximbay.cur }}">
