@@ -162,7 +162,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
     account_id = StringField(
         label=_('Account ID'),
         validators=[
-            Optional(),
+            DataRequired(),
             IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alpabets.')
         ],
         description=_(
@@ -172,7 +172,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
     account_securitykey = StringField(
         label=_('Account Secret Key'),
         validators=[
-            Optional(),
+            DataRequired(),
             IndicoRegexp(r'[A-Z0-9]{0,40}', message='Field must contain up to 40 digits and alpabets.')
         ],
         description=_(

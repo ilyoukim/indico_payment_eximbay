@@ -58,7 +58,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
-        'language': 'EN',
+        'language': None,
         'order_description': None,
         'order_identifier': None,
     }
@@ -126,8 +126,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     def adjust_payment_form_data(self, data):
         """Prepare the payment form shown to registrants"""
+        base_url = data['event_settings']['url']
         
         data['eximbay'] = self._get_transaction_parameters(data)
-        data['payment_url'] = urljoin(data['event_settings']['url'], EXIMBAY_PP_BASIC_URL)
-        # data['payment_url'] = 'http://127.0.0.1:5000/quarks'
+        data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
 

@@ -18,28 +18,24 @@
 """
 Callbacks for asynchronous replies by the Eximbay service and to redirect the user
 """
-import json
-import time
+
 from urllib.parse import urljoin, parse_qsl, urlsplit
 
 import requests
 from flask import flash, redirect, request
-from requests import RequestException
-from werkzeug.exceptions import BadRequest, NotFound
-from werkzeug.exceptions import NotImplemented as HTTPNotImplemented
 
-from indico.core.plugins import url_for_plugin
-from indico.modules.events.payment.controllers import RHPaymentBase
+from werkzeug.exceptions import BadRequest
+
 from indico.modules.events.payment.models.transactions import TransactionAction
 from indico.modules.events.payment.notifications import notify_amount_inconsistency
-from indico.modules.events.payment.util import TransactionStatus, get_active_payment_plugins, register_transaction
+from indico.modules.events.payment.util import register_transaction
 from indico.modules.events.registration.models.registrations import Registration
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
 from indico_payment_eximbay import _
 from indico_payment_eximbay.plugin import EximbayPaymentPlugin
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_BASIC_URL, EXIMBAY_PP_DIRECT_URL, get_fgkey)
+from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL, get_fgkey)
 
 
 class TransactionFailure(Exception):
@@ -159,28 +155,26 @@ class RHEximbayIPN(RH):
 
     def _confirm_transaction(self, assert_data):
         """Confirm to Eximbay server that the transaction is accepted
+        
         3.2	Querying a Single Transaction
         """
-        
         settings = EximbayPaymentPlugin.event_settings.get_all(self.event)
-        
-        completion_data = {}
-        for key in ('ref', 'cur', 'amt', 'transid'):
-            completion_data[key] = assert_data.get(key)
         
         data = {
             'ver': '230',
-            'charset': 'UTF-8',
+            'mid': settings['account_id'],
             'txntype': 'QUERY',
             'keyfield': 'TRANSID',
-            'mid': settings['account_id'],
+            'ref': assert_data['ref'],
+            'cur': assert_data['cur'],
+            'amt': assert_data['amt'],
             'lang': settings['language'],
+            'transid': assert_data['transid'],
+            'charset': 'UTF-8',
         }
-        data.update(completion_data)
         data['fgkey'] = get_fgkey(settings['account_securitykey'], data)
         
-        request_url = urljoin(self.eximbay_url, EXIMBAY_PP_DIRECT_URL)
-        request_url = 'http://127.0.0.1:5000/quarks'
+        request_url = urljoin(settings['url'], EXIMBAY_PP_DIRECT_URL)
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
             response.raise_for_status()
@@ -193,7 +187,7 @@ class RHEximbayIPN(RH):
                 raise TransactionFailure(step='confirm transaction', details=res['rescode'])
         except:
             raise TransactionFailure(step='response at confirm', details=response.text)
-        assert res['status'] == 'SALE'
+        assert res['status'] in ('SALE', 'AUTH')
         return True
 
     def _verify_amount(self, assert_data):
@@ -233,7 +227,7 @@ class RHEximbayIPN(RH):
 
 
 class RHEximbayReturn(RHEximbayIPN):
-    """Confirmation message after successful payment"""
+    """Confirmation message after payment"""
 
     def _process(self):
         # flash(_('Your payment request has been processed.'), 'return')
