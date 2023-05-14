@@ -67,11 +67,8 @@ class RHEximbayIPN(RH):
 
     def _process(self):
         """process the reply from Eximbay about the transaction."""
-        # if self.token is not None:
-        #     self._process_confirmation()
-        
-        flash(_('You cancelled the payment process.'), 'info')
-        return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
+        if self.token is not None:
+            self._process_confirmation()
 
     def _process_confirmation(self):
         """Process the confirmation response inside indico."""
@@ -94,41 +91,6 @@ class RHEximbayIPN(RH):
     
     def _assert_payment(self):
         """Check the status of the transaction with Eximbay.
-        
-        post = {
-           'ver': '230',
-           'txntype': 'PAYMENT',
-           'mid': '1849705C64',
-           'payto': 'EXIMBAY.COM',
-           'ref': 'item_buy_unique',
-           'amt': '10000',
-           'cur': 'KRW',
-           'accesscountry': 'KR',
-           'paymethod': 'P101',
-           'cardholder': 'NAME',
-           'email': 'xxx@xxx.xx',
-           'cardno1': '4111',
-           'cardno4': '1111',
-           'resdt': '20191030145148',
-           'transid': { 24 digit & alphabetics },
-           'authcode': '881693',
-           'rescode': '0000',
-           'resmsg': 'Success.',
-           'fgkey': { length : 64 characters },
-           'baseamt': '',
-           'basecur': '',
-           'baserate': '',
-           'foreignamt': '',
-           'foreigncur': '',
-           'foreignrate': '',
-           'dccrate': '',
-           'dm_decision': '',
-           'dm_review': '',
-           'dm_reject': '',
-           'param1': '',
-           'param2': '',
-           'param3': '',
-        }
         
         Returns transaction assert data.
         """
@@ -280,5 +242,5 @@ class RHEximbayReturn(RHEximbayIPN):
     """Confirmation message after successful payment"""
 
     def _process(self):
-        flash(_('Your payment request has been processed.'), 'success')
+        # flash(_('Your payment request has been processed.'), 'return')
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
