@@ -71,9 +71,11 @@ class RHEximbayIPN(RH):
             self._process_confirmation()
 
     def _process_confirmation(self):
-        """Process the confirmation response inside indico."""
-        # assert transaction status from Eximbay
-        assert_response = self._assert_payment()
+        """Process the confirmation response inside indico.
+        
+        Assert transaction status from Eximbay
+        """
+        assert_response = request.form
         try:
             # verify the signature of Eximbay for the transaction
             self._verify_signature(assert_response)
@@ -87,14 +89,6 @@ class RHEximbayIPN(RH):
         except TransactionFailure as err:
             EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
             raise
-    
-    
-    def _assert_payment(self):
-        """Check the status of the transaction with Eximbay.
-        
-        Returns transaction assert data.
-        """
-        return request.form
     
     def _perform_request(self, endpoint, **kwargs):
         """
