@@ -29,10 +29,10 @@ blueprint = IndicoPluginBlueprint(
     url_prefix='/event/<int:event_id>/registrations/<int:reg_form_id>/payment/eximbay'
 )
 
-blueprint.add_url_rule('/init', 'init', RHInitEximbayPayment, methods=('GET', 'POST'))
+# blueprint.add_url_rule('/init', 'init', RHInitEximbayPayment, methods=('GET', 'POST'))
 # blueprint.add_url_rule('/failure', 'failure', UserCancelHandler, methods=('GET', 'POST'))
 # blueprint.add_url_rule('/cancel', 'cancel', UserFailureHandler, methods=('GET', 'POST'))
-blueprint.add_url_rule('/success', 'success', UserSuccessHandler, methods=('GET', 'POST'))
+# blueprint.add_url_rule('/success', 'success', UserSuccessHandler, methods=('GET', 'POST'))
 
 # Used by Eximbay to send an asynchronous notification for the transaction (pending, successful, etc)
 blueprint.add_url_rule('/ipn', 'notify', RHEximbayIPN, methods=('POST',))
