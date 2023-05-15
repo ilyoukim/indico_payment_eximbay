@@ -166,7 +166,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alpabets.')
         ],
         description=_(
-            'Default Eximbay account ID, such as "1849705C64". '
+            'Eximbay account ID, such as "1849705C64". '
         )
     )
     account_securitykey = IndicoPasswordField(
@@ -176,7 +176,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             IndicoRegexp(r'[A-Z0-9]{0,40}', message='Field must contain up to 40 digits and alpabets.')
         ],
         description=_(
-            'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
+            'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
         )
     )
     language = StringField(
