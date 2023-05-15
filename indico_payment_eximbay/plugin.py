@@ -27,9 +27,9 @@ from urllib.parse import urljoin
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
+from indico_payment_eximbay.blueprint import blueprint
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
 from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, get_fgkey)
-
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     """Eximbay
@@ -49,7 +49,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey': None,
         'language': 'EN',
         'order_description': '{event_title}, {regform_title}, {user_name}',
-        'order_identifier': 'e{event_id}r{registration_id}',
+        'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
     }
     #: per event default settings - use the global settings
     default_event_settings = {
@@ -69,7 +69,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     def get_blueprints(self):
         """Blueprint for URL endpoints with callbacks"""
-        from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
     def _get_transaction_parameters(self, data):
@@ -87,7 +86,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'user_name': registration.full_name,
             'user_firstname': registration.first_name,
             'user_lastname': registration.last_name,
-            'frendly_id': registration.friendly_id,
             'event_id': registration.event_id,
             'event_title': registration.event.title,
             'registration_id': registration.id,

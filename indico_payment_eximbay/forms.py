@@ -11,7 +11,6 @@ from wtforms.fields import StringField, URLField
 from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 
 from indico.modules.events.payment import PaymentEventSettingsFormBase, PaymentPluginSettingsFormBase
-from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.validators import IndicoRegexp
 
 from indico_payment_eximbay import _
