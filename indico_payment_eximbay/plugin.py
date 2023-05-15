@@ -27,7 +27,6 @@ from urllib.parse import urljoin
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
-from indico_payment_eximbay.blueprint import blueprint
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
 from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, get_fgkey)
 
@@ -69,6 +68,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     def get_blueprints(self):
         """Blueprint for URL endpoints with callbacks"""
+        from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
     def _get_transaction_parameters(self, data):
