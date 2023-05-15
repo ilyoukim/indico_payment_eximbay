@@ -99,16 +99,18 @@ class RHEximbayIPN(RH):
         This will automatically raise any HTTP errors encountered during the request.
         If the request itself fails, a :py:exc:`~.TransactionFailure` is raised for ``task``.
         """
+        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
+        
         data = {
             'ver': '230',
             'txntype': 'QUERY',
             'charset': 'UTF-8',
-            'mid': self.eximbay_account
+            'mid': settings['account_id']
         }
         data.update(kwargs)
-        data['fgkey'] = get_fgkey(self.eximbay_securitykey, data)
+        data['fgkey'] = get_fgkey(settings['account_securitykey'], data)
         
-        request_url = urljoin(self.eximbay_url, endpoint)
+        request_url = urljoin(settings['url'], endpoint)
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
             response.raise_for_status()
@@ -121,7 +123,7 @@ class RHEximbayIPN(RH):
         
         Check fgkey from data with securitykey
         """
-        settings = EximbayPaymentPlugin.event_settings.get_all(self.event)
+        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
         
         if not settings['account_id'] == data['mid']:
             raise TransactionFailure(step='verification', details='mismatched account ID')
@@ -158,7 +160,7 @@ class RHEximbayIPN(RH):
         
         3.2	Querying a Single Transaction
         """
-        settings = EximbayPaymentPlugin.event_settings.get_all(self.event)
+        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
         
         data = {
             'ver': '230',
