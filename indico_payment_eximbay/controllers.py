@@ -86,7 +86,7 @@ class RHEximbayIPN(RH):
             EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
             raise
     
-    def _perform_request(self, endpoint, **kwargs):
+    def _perform_request(self, task, endpoint, **kwargs):
         """
         Helper for performing a request against Eximbay
 
@@ -98,12 +98,13 @@ class RHEximbayIPN(RH):
 
         This will automatically raise any HTTP errors encountered during the request.
         If the request itself fails, a :py:exc:`~.TransactionFailure` is raised for ``task``.
+        
+        3.2	Querying a Single Transaction
         """
         settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
         
         data = {
             'ver': '230',
-            'txntype': 'QUERY',
             'charset': 'UTF-8',
             'mid': settings['account_id']
         }
@@ -114,8 +115,8 @@ class RHEximbayIPN(RH):
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
             response.raise_for_status()
-        except request.RequestException as e:
-            raise RuntimeError("request error : %r" % (e.respone))
+        except requests.HTTPError:
+            raise TransactionFailure(step=task, details=response.text)
         return response
 
     def _verify_signature(self, data):
@@ -128,16 +129,16 @@ class RHEximbayIPN(RH):
         if not settings['account_id'] == data['mid']:
             raise TransactionFailure(step='verification', details='mismatched account ID')
         
-        if not data['rescode'] == '0000':
-            raise TransactionFailure(step='verification', details='rescode is not %s' % data['rescode'])
-        
-        if not data['resmsg'] == 'Success.':
-            raise TransactionFailure(step='verification', details='respone message is %s' % data['resmsg'])
-        
         fgkey = get_fgkey(settings['account_securitykey'], data)
         if not fgkey == str(data['fgkey']):
-            raise RuntimeError("Return hash key error : %r ... %r" % (fgkey, data))
-    
+            raise TransactionFailure(step='verification', details='fgkey is not corrected')
+        
+        if not data['rescode'] == '0000':
+            raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
+        
+        if not data['resmsg'] == 'Success.':
+            raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
+
     def _is_duplicate_transaction(self, transaction_data):
         """Check if this transaction has already been recorded"""
         
@@ -150,45 +151,25 @@ class RHEximbayIPN(RH):
         new = transaction_data
         return (
             old['ref'] == new['ref'] and
-            old['cur'] == new['cur'] and
             old['amt'] == new['amt'] and
-            old['mid'] == new['mid']
+            old['cur'] == new['cur']
         )
 
     def _confirm_transaction(self, assert_data):
         """Confirm to Eximbay server that the transaction is accepted
-        
-        3.2	Querying a Single Transaction
         """
-        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
+        completion_data = { 'txntype': 'QUERY', 'keyfield': 'TRANSID' }
+        for key in ('ref', 'cur', 'amt', 'transid'):
+            completion_data[key] = assert_data.get(key)
         
-        data = {
-            'ver': '230',
-            'mid': settings['account_id'],
-            'txntype': 'QUERY',
-            'keyfield': 'TRANSID',
-            'ref': assert_data['ref'],
-            'cur': assert_data['cur'],
-            'amt': assert_data['amt'],
-            'lang': settings['language'],
-            'transid': assert_data['transid'],
-            'charset': 'UTF-8',
-        }
-        data['fgkey'] = get_fgkey(settings['account_securitykey'], data)
-        
-        request_url = urljoin(settings['url'], EXIMBAY_PP_DIRECT_URL)
-        try:
-            response = requests.post(url=request_url, data=data, timeout=5)
-            response.raise_for_status()
-        except request.RequestException as e:
-            raise RuntimeError("request error : %r" % (e.respone))
-        
+        response = self._perform_request('confirm', EXIMBAY_PP_DIRECT_URL, **completion_data)
         try:
             res = dict(parse_qsl(urlsplit(response.text).path))
             if not res['rescode'] == '0000':
                 raise TransactionFailure(step='confirm transaction', details=res['rescode'])
         except:
             raise TransactionFailure(step='response at confirm', details=response.text)
+        
         assert res['status'] in ('SALE', 'AUTH')
         return True
 
@@ -203,6 +184,7 @@ class RHEximbayIPN(RH):
         currency = assert_data['cur']
         if expected_amount == amount and expected_currency == currency:
             return True
+        
         EximbayPaymentPlugin.logger.warning("Payment doesn't match events fee: %s %s != %s %s",
                                             amount, currency, expected_amount, expected_currency)
         notify_amount_inconsistency(self.registration, amount, currency)
@@ -228,9 +210,18 @@ class RHEximbayIPN(RH):
         )
 
 
-class RHEximbayReturn(RHEximbayIPN):
+class RHEximbayReturn(RH):
     """Confirmation message after payment"""
+
+    CSRF_ENABLED = False
+
+    def _process_args(self):
+        self.token = request.args['token']
+        self.registration = Registration.query.filter_by(uuid=self.token).first()
+        if not self.registration:
+            raise BadRequest
 
     def _process(self):
         # flash(_('Your payment request has been processed.'), 'return')
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
+
