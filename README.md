@@ -12,6 +12,9 @@ they are automatically sent back to Indico.
 
 - Initial release for Indico 3.2
 
+## Installation
+pip install git+https://{git_server}/indico_payment_eximbay.git
+
 
 ## Development test information
 - url : https://secureapi.test.eximbay.com
