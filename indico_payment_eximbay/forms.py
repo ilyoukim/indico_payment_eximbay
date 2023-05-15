@@ -186,7 +186,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             IndicoRegexp(r'[A-Z]{2,2}', message='KR or EN')
         ],
         description=_(
-            'Eximbay payment display language. '
+            'Default Eximbay payment display language. '
             'Supported: EN or KR'
         )
     )
