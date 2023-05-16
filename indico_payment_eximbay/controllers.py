@@ -202,8 +202,8 @@ class RHEximbayIPN(RH):
         """Register the transaction as paid."""
         register_transaction(
             registration = self.registration,
-            amount = self.registration.transaction.amount,
-            currency = self.registration.transaction.currency,
+            amount = float(assert_data['amt']),
+            currency = assert_data['cur'],
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
             data=assert_data
