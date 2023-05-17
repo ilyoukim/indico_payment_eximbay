@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2020 Gyujin Kim
+## Copyright (C) 2019 - 2023 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -15,9 +15,7 @@
 ##
 ## You should have received a copy of the GNU General Public License
 ## along with Eximbay Indico EPayment Plugin;if not, see <http://www.gnu.org/licenses/>.
-import uuid
 
-import iso4217
 import operator
 import hashlib
 from werkzeug.exceptions import NotImplemented as HTTPNotImplemented
@@ -33,8 +31,11 @@ EXIMBAY_PP_DIRECT_URL = '/Gateway/DirectProcessor.krp'
 # payment provider identifier
 PROVIDER_EXIMBAY = 'eximbay'
 
-#: currencies for which the major to minor currency ratio is not a multiple of 10
-NON_DECIMAL_CURRENCY = {'MRU', 'MGA'}
+# Support Currency : Eximbay manual - Appendix A
+EXIMBAY_CURRENCY = {'KRW','USD','EUR','GBP','JPY','THB','SGD','RUB','HKD','CAD','AUD'}
+
+# Support Language : Eximbay manual - Appendix B
+EXIMBAY_LANGUAGE = {'KR','EN','CN','JP','RU','TH','TW','VN'}
 
 
 def validate_currency(iso_code):
@@ -44,70 +45,91 @@ def validate_currency(iso_code):
     :param iso_code: an ISO4217 currency code, e.g. ``"EUR"``
     :raises: :py:exc:`~.HTTPNotImplemented` if the currency is not valid
     """
-    if iso_code in NON_DECIMAL_CURRENCY:
+    if iso_code in EXIMBAY_CURRENCY:
         raise HTTPNotImplemented(
             _("Unsupported currency '{0}' for Eximbay. Please contact the organisers").format(iso_code)
         )
-    try:
-        iso4217.Currency(iso_code)
-    except ValueError:
+
+
+def validate_language(lang_code):
+    """
+    Check whether the currency can be properly handled by this plugin
+
+    :raises: :py:exc:`~.HTTPNotImplemented` if the currency is not valid
+    """
+    if lang_code in EXIMBAY_LANGUAGE:
         raise HTTPNotImplemented(
-            _("Unknown currency '{0}' for Eximbay. Please contact the organisers").format(iso_code)
+            _("Unsupported language '{0}' for Eximbay. Please contact the organisers").format(lang_code)
         )
-
-def get_request_header(api_spec, account_id):
-    return {
-        'SpecVersion': api_spec,
-        'CustomerId': get_customer_id(account_id),
-        'RequestId': str(uuid.uuid4()),
-        'RetryIndicator': 0,
-    }
-
-
-def get_customer_id(account_id):
-    """Extract customer ID from account ID.
-
-    Customer ID is the first part (befor the hyphen) of the account ID.
-    """
-    return account_id.split('-')[0]
-
-
-def get_terminal_id(account_id):
-    """Extract the teminal ID from account ID.
-
-    The Terminal ID is the second part (after the hyphen) of the
-    account ID.
-    """
-    return account_id.split('-')[1]
 
 
 def get_fgkey(exb_secret, data):
     """Specific function for Eximbay
     Generate fgkey from input parameters and secretkey
+    Eximbay manual Chapter 4
     
     :param data: request or response params
     :return: fgkey
     """
-    if len(exb_secret) < 1:
-        return ''
+    if len(exb_secret) < 32:
+        raise KeyError
     
-    if 'fgkey' in data:
-        newData = {key: value for key, value in data.items()}
+    newData = {}
+    newData.update(data)
+    
+    if 'fgkey' in newData:
         del newData['fgkey']
-    else:
-        newData = data
     
     # A : Make sorted query
-    query = sorted(newData.items(), key=operator.itemgetter(0))
+    params = sorted(newData.items(), key=operator.itemgetter(0))
     
-    params = ''
-    for (key, value) in query:
-        params += '%s=%s&' % (key, value)
+    query = "&".join("{}={}".format(key, value) for key, value in params.items())
     
     # B: string concat secretkey and A with ? character
-    sp = '%s?%s' % (exb_secret, params[:-1])
+    sp = '%s?%s' % (exb_secret, query)
 
     # C: generate hashing from B and SHA256 function
     # convert character set to UTF-8
     fgkey = hashlib.sha256(sp.encode('utf-8')).hexdigest()
     return fgkey.upper()
+
+
+def get_transdata(exb_secret, assert_data):
+    """Generate eximbay transaction data
+    # see the Eximbay Manual on what these things mean
+    
+    assert_data : dict
+    
+    transdata = {
+        'charset': 'UTF-8',                 ## default
+        'ver': '230',                       ## eximbay version
+        'txntype': 'PAYMENT',               # message type: PAYMENT, QUERY
+        'ostype': 'P',                      # P:pc, M:mobile
+        'displaytype': 'P',                 # P:popup, R:page redirect
+        'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
+        'mid': exim_account_id,
+        'lang': display_language,           # KR, EN, CN, JP
+        'ref': order_identifier,            # orderId : unique value
+        'amt': registration_price,
+        'cur': registration_currency,
+        'buyer': registration_full_name,
+        'email': registration_email,
+        'item_0_product': order_description,
+        'item_0_unitPrice': registration_price,
+        'item_0_quantity': '1',
+        'returnurl': return_url,
+        'statusurl': status_post_url,       # where to asynchronously call back from Eximbay
+        }
+    """
+    transdata = {}
+    transdata.update(assert_data)
+
+    if not 'ver' in transdata:
+        transdata['ver'] = '230'
+    
+    if not 'charset' in transdata:
+        transdata['charset'] = 'UTF-8'
+    
+    transdata = get_fgkey(exb_secret, transdata)
+    
+    return transdata

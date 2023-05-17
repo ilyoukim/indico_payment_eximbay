@@ -21,7 +21,7 @@ Definition of callbacks exposed by the Indico server
 
 from indico.core.plugins import IndicoPluginBlueprint
 
-from indico_payment_eximbay.controllers import RHEximbayIPN, RHEximbayReturn
+from indico_payment_eximbay.controllers import RHEximbayNotify, RHEximbayReturn
 
 
 blueprint = IndicoPluginBlueprint(
@@ -33,4 +33,4 @@ blueprint = IndicoPluginBlueprint(
 blueprint.add_url_rule('/return', 'return', RHEximbayReturn, methods=('GET', 'POST'))
 
 # Used by Eximbay to send an asynchronous notification for the transaction (pending, successful, etc)
-blueprint.add_url_rule('/ipn', 'notify', RHEximbayIPN, methods=('POST',))
+blueprint.add_url_rule('/status', 'notify', RHEximbayNotify, methods=('POST',))

@@ -35,7 +35,7 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay import _
 from indico_payment_eximbay.plugin import EximbayPaymentPlugin
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL, get_fgkey)
+from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL, get_fgkey, get_transdata)
 
 
 class TransactionFailure(Exception):
@@ -50,7 +50,7 @@ class TransactionFailure(Exception):
         self.details = details
 
 
-class RHEximbayIPN(RH):
+class RHEximbayNotify(RH):
     """Handler for notification from Eximbay service"""
 
     CSRF_ENABLED = False
@@ -86,7 +86,7 @@ class RHEximbayIPN(RH):
             EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
             raise
     
-    def _perform_request(self, task, endpoint, **kwargs):
+    def _perform_request(self, task, assert_data):
         """
         Helper for performing a request against Eximbay
 
@@ -94,7 +94,7 @@ class RHEximbayIPN(RH):
         :type task: basestring
         :param endpoint: the URL endpoint *relative* to the Eximbay base URL
         :type endpoint: basestring
-        :param **kwargs: kwargs passed during the request
+        :param assert_data: assert_data passed during the request
 
         This will automatically raise any HTTP errors encountered during the request.
         If the request itself fails, a :py:exc:`~.TransactionFailure` is raised for ``task``.
@@ -103,15 +103,10 @@ class RHEximbayIPN(RH):
         """
         settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
         
-        data = {
-            'ver': '230',
-            'charset': 'UTF-8',
-            'mid': settings['account_id']
-        }
-        data.update(kwargs)
-        data['fgkey'] = get_fgkey(settings['account_securitykey'], data)
+        assert_data['mid'] = settings['account_id']
+        data = get_transdata(settings['account_securitykey'], assert_data)
         
-        request_url = urljoin(settings['url'], endpoint)
+        request_url = urljoin(settings['url'], EXIMBAY_PP_DIRECT_URL)
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
             response.raise_for_status()
@@ -151,18 +146,22 @@ class RHEximbayIPN(RH):
         new = transaction_data
         return (
             old['ref'] == new['ref'] and
-            old['amt'] == new['amt'] and
-            old['cur'] == new['cur']
+            old['cur'] == new['cur'] and
+            float(old['amt']) == float(new['amt'])
         )
 
     def _confirm_transaction(self, assert_data):
         """Confirm to Eximbay server that the transaction is accepted
         """
-        completion_data = { 'txntype': 'QUERY', 'keyfield': 'TRANSID' }
+        completion_data = {
+            'txntype': 'QUERY',
+            'keyfield': 'TRANSID'
+            }
+        
         for key in ('ref', 'cur', 'amt', 'transid'):
             completion_data[key] = assert_data.get(key)
         
-        response = self._perform_request('confirm', EXIMBAY_PP_DIRECT_URL, **completion_data)
+        response = self._perform_request('confirm', completion_data)
         try:
             res = dict(parse_qsl(urlsplit(response.text).path))
             if not res['rescode'] == '0000':
@@ -206,7 +205,7 @@ class RHEximbayIPN(RH):
             currency = assert_data['cur'],
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
-            data=assert_data
+            data = assert_data
         )
 
 
