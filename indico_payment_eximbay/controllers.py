@@ -28,7 +28,7 @@ from werkzeug.exceptions import BadRequest
 
 from indico.modules.events.payment.models.transactions import TransactionAction
 from indico.modules.events.payment.notifications import notify_amount_inconsistency
-from indico.modules.events.payment.util import register_transaction
+from indico.modules.events.payment.util import TransactionStatus, register_transaction
 from indico.modules.events.registration.models.registrations import Registration
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
@@ -216,11 +216,21 @@ class RHEximbayReturn(RH):
 
     def _process_args(self):
         self.token = request.args['token']
+        try:
+            if self.token is not None:
+                pass
+        except TransactionFailure:
+            flash(_('Your payment could not be confirmed. Please contact the event organizers.'), 'warning')
+        
         self.registration = Registration.query.filter_by(uuid=self.token).first()
         if not self.registration:
             raise BadRequest
 
     def _process(self):
-        # flash(_('Your payment request has been processed.'), 'return')
+        if self.registration.transaction.status == TransactionStatus.successful:
+            flash(_('Your payment has been confirmed.'), 'success')
+        else:
+            flash(_('Your payment has failed.'), 'info')
+        
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
