@@ -80,10 +80,10 @@ def get_fgkey(exb_secret, data):
     if 'fgkey' in newData:
         del newData['fgkey']
     
-    # A : Make sorted query
+    # A : Make sorted query with list type
     params = sorted(newData.items(), key=operator.itemgetter(0))
     
-    query = "&".join("{}={}".format(key, value) for key, value in params.items())
+    query = "&".join(["{}={}".format(key, value) for key, value in params])
     
     # B: string concat secretkey and A with ? character
     sp = '%s?%s' % (exb_secret, query)
@@ -122,14 +122,15 @@ def get_transdata(exb_secret, assert_data):
         }
     """
     transdata = {}
-    transdata.update(assert_data)
-
-    if not 'ver' in transdata:
-        transdata['ver'] = '230'
     
-    if not 'charset' in transdata:
+    if not 'charset' in assert_data:
         transdata['charset'] = 'UTF-8'
     
-    transdata = get_fgkey(exb_secret, transdata)
+    if not 'ver' in assert_data:
+        transdata['ver'] = '230'
+
+    transdata.update(assert_data)
+    
+    transdata['fgkey'] = get_fgkey(exb_secret, transdata)
     
     return transdata
