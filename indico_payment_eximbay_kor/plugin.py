@@ -27,11 +27,11 @@ from urllib.parse import urljoin
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
-from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
-from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, get_transdata)
+from indico_payment_eximbay_kor.forms import EventSettingsForm, PluginSettingsForm
+from indico_payment_eximbay_kor.util import (EXIMBAY_PP_BASIC_URL, get_transdata)
 
-class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Eximbay Global
+class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
+    """Eximbay Domestic
 
     Provides an EPayment method using the Eximbay API.
     """
@@ -42,11 +42,10 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     event_settings_form = EventSettingsForm
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for Global Brand Card',
+        'method_name': 'Eximbay for Korea Domestic Card',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
-        'language': 'EN',
         'order_description': '{event_title}, {regform_title}, {user_name}',
         'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
     }
@@ -57,7 +56,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
-        'language': None,
         'order_description': None,
         'order_identifier': None,
     }
@@ -68,7 +66,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     def get_blueprints(self):
         """Blueprint for URL endpoints with callbacks"""
-        from indico_payment_eximbay.blueprint import blueprint
+        from indico_payment_eximbay_kor.blueprint import blueprint
         return blueprint
 
     def _get_transaction_parameters(self, data):
@@ -102,7 +100,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'displaytype': 'P',                 # P:popup, R:page redirect
             'paymethod': 'P000',                # Credit Card
             'mid': settings['account_id'],
-            'lang': settings['language'],       # KR, EN, CN, JP
+            'lang': 'KR',                       # KR, EN, CN, JP
+            'issuercountry': 'KR',
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
@@ -111,8 +110,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'item_0_product': order_description,
             'item_0_unitPrice': str(registration.price),
             'item_0_quantity': '1',
-            'returnurl': url_for_plugin('payment_eximbay.return', registration.locator.uuid, _external=True),
-            'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
+            'returnurl': url_for_plugin('payment_eximbay_kor.return', registration.locator.uuid, _external=True),
+            'statusurl': url_for_plugin('payment_eximbay_kor.notify', registration.locator.uuid, _external=True),
             }
         
         transaction_data = get_transdata(settings['account_securitykey'], transaction_data)
