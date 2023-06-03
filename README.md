@@ -10,6 +10,10 @@ they are automatically sent back to Indico.
 
 ### 3.0
 
+- plugins --> Init
+
+### 3.0
+
 - Initial release for Indico 3.2
 
 ## Installation
