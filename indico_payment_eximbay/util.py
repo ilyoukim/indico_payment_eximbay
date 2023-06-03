@@ -94,7 +94,7 @@ def get_fgkey(exb_secret, data):
     return fgkey.upper()
 
 
-def get_transdata(exb_secret, assert_data):
+def get_transdata(exb_secret, assert_data, isKOR=False):
     """Generate eximbay transaction data
     # see the Eximbay Manual on what these things mean
     
@@ -130,6 +130,11 @@ def get_transdata(exb_secret, assert_data):
         transdata['ver'] = '230'
 
     transdata.update(assert_data)
+    
+    # Korea Domestic Card
+    if isKOR:
+        transdata['lang'] = 'KR'
+        transdata['issuercountry'] = 'KR'
     
     transdata['fgkey'] = get_fgkey(exb_secret, transdata)
     
