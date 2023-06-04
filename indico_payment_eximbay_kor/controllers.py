@@ -19,9 +19,9 @@
 Callbacks for asynchronous replies by the Eximbay service and to redirect the user
 """
 
+import requests
 from urllib.parse import urljoin, parse_qsl, urlsplit
 
-import requests
 from flask import flash, redirect, request
 
 from werkzeug.exceptions import BadRequest

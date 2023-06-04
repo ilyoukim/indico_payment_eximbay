@@ -16,8 +16,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Eximbay Indico EPayment Plugin;if not, see <http://www.gnu.org/licenses/>.
 
-import operator
 import hashlib
+import operator
 
 from indico_payment_eximbay import _
 
