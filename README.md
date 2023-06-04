@@ -8,9 +8,9 @@ they are automatically sent back to Indico.
 
 ## Changelog
 
-### 3.0
+### 3.0.1
 
-- plugins --> Init
+- for Korea domestic credit card
 
 ### 3.0
 
@@ -27,5 +27,5 @@ pip install git+https://{git_server}/indico_payment_eximbay.git
 - credit card
     - Card Type : VISA
     - Card No : 4111 1111 1111 1111
-    - Expiry Date : 12/20
+    - Expiry Date : 12/xx
     - CVV : 123
