@@ -46,7 +46,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for International credit card',
+        'method_name': 'Eximbay for International credit cards',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,

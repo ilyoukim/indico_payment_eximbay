@@ -46,7 +46,7 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for Korea Domestic Card',
+        'method_name': 'Eximbay for Korea Domestic Cards',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
