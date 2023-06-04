@@ -228,7 +228,8 @@ class RHEximbayReturn(RH):
 
     def _process(self):
         try:
-            if self.registration.transaction.status == TransactionStatus.successful:
+            if hasattr(self.registration.transaction, 'status') and \
+                self.registration.transaction.status == TransactionStatus.successful:
                 flash(_('Your payment has been confirmed.'), 'success')
             else:
                 flash(_('Your payment has failed.'), 'info')
