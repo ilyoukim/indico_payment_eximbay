@@ -227,9 +227,12 @@ class RHEximbayReturn(RH):
             raise BadRequest
 
     def _process(self):
-        if self.registration.transaction.status == TransactionStatus.successful:
-            flash(_('Your payment has been confirmed.'), 'success')
-        else:
+        try:
+            if self.registration.transaction.status == TransactionStatus.successful:
+                flash(_('Your payment has been confirmed.'), 'success')
+            else:
+                flash(_('Your payment has failed.'), 'info')
+        except TransactionFailure:
             flash(_('Your payment has failed.'), 'info')
         
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
