@@ -118,17 +118,6 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Event managers will be able to override this.'
         )
     )
-    language = StringField(
-        label=_('Display Language'),
-        validators=[
-            Optional(),
-            IndicoRegexp(r'[A-Z]{0,2}', message='KR or EN')
-        ],
-        description=_(
-            'Default Eximbay payment display language. '
-            'Supported: EN or KR'
-        )
-    )
     order_description = StringField(
         label=_('Order Description'),
         validators=[DataRequired(), FormatField(max_length=80)],
@@ -177,17 +166,6 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         ],
         description=_(
             'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
-        )
-    )
-    language = StringField(
-        label=_('Display Language'),
-        validators=[
-            DataRequired(),
-            IndicoRegexp(r'[A-Z]{2,2}', message='KR or EN')
-        ],
-        description=_(
-            'Default Eximbay payment display language. '
-            'Supported: EN or KR'
         )
     )
     order_description = StringField(

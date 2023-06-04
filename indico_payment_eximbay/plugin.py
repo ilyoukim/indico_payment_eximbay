@@ -46,7 +46,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
-        'language': 'EN',
         'order_description': '{event_title}, {regform_title}, {user_name}',
         'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
     }
@@ -57,7 +56,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
-        'language': None,
         'order_description': None,
         'order_identifier': None,
     }
@@ -101,8 +99,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'ostype': 'P',                      # P:pc, M:mobile
             'displaytype': 'P',                 # P:popup, R:page redirect
             'paymethod': 'P000',                # Credit Card
+            'lang': 'EN',                       # KR, EN, CN, JP
             'mid': settings['account_id'],
-            'lang': settings['language'],       # KR, EN, CN, JP
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
