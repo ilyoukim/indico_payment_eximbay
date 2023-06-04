@@ -131,8 +131,8 @@ class RHEximbayKorNotify(RH):
         if not data['rescode'] == '0000':
             raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
         
-        if not data['resmsg'] == 'Success.':
-            raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
+        # if not data['resmsg'] == 'Success.':
+        #     raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
 
     def _is_duplicate_transaction(self, transaction_data):
         """Check if this transaction has already been recorded"""
