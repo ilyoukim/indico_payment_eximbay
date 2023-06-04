@@ -189,14 +189,6 @@ class RHEximbayKorNotify(RH):
         notify_amount_inconsistency(self.registration, amount, currency)
         return False
 
-    def _cancel_transaction(self, assert_data):
-        """Inform Sixpay that the transaction is canceled.
-
-        Cancel the transaction at Sixpay. This method is implemented but
-        not used and tested yet.
-        """
-        return None
-    
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
         register_transaction(
