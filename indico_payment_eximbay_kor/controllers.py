@@ -35,7 +35,8 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay_kor import _
 from indico_payment_eximbay_kor.plugin import EximbayKorPaymentPlugin
-from indico_payment_eximbay_kor.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL, get_fgkey, get_transdata)
+from indico_payment_eximbay_kor.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
+                                             get_fgkey, get_transdata)
 
 
 class TransactionFailure(Exception):

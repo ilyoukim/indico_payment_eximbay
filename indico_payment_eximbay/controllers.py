@@ -35,7 +35,8 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay import _
 from indico_payment_eximbay.plugin import EximbayPaymentPlugin
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL, get_fgkey, get_transdata)
+from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
+                                         get_fgkey, get_transdata)
 
 
 class TransactionFailure(Exception):
@@ -131,8 +132,8 @@ class RHEximbayNotify(RH):
         if not data['rescode'] == '0000':
             raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
         
-        if not data['resmsg'] == 'Success.':
-            raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
+        # if not data['resmsg'] == 'Success.':
+        #     raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
 
     def _is_duplicate_transaction(self, transaction_data):
         """Check if this transaction has already been recorded"""
