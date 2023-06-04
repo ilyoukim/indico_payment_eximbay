@@ -3,7 +3,7 @@
 This plugin provides a payment option for Indico's payment module using the
 Eximbay API.
 
-When used, the user will be sent to Saferpay to make the payment, and afterwards
+When used, the user will be sent to Eximbay to make the payment, and afterwards
 they are automatically sent back to Indico.
 
 ## Changelog
