@@ -42,7 +42,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     event_settings_form = EventSettingsForm
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for Global Brand Card',
+        'method_name': 'Eximbay for International credit card',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
