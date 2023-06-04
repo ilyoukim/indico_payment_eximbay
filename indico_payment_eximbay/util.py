@@ -18,7 +18,6 @@
 
 import operator
 import hashlib
-from werkzeug.exceptions import NotImplemented as HTTPNotImplemented
 
 from indico_payment_eximbay import _
 
@@ -36,31 +35,6 @@ EXIMBAY_CURRENCY = {'KRW','USD','EUR','GBP','JPY','THB','SGD','RUB','HKD','CAD',
 
 # Support Language : Eximbay manual - Appendix B
 EXIMBAY_LANGUAGE = {'KR','EN','CN','JP','RU','TH','TW','VN'}
-
-
-def validate_currency(iso_code):
-    """
-    Check whether the currency can be properly handled by this plugin
-
-    :param iso_code: an ISO4217 currency code, e.g. ``"EUR"``
-    :raises: :py:exc:`~.HTTPNotImplemented` if the currency is not valid
-    """
-    if iso_code in EXIMBAY_CURRENCY:
-        raise HTTPNotImplemented(
-            _("Unsupported currency '{0}' for Eximbay. Please contact the organisers").format(iso_code)
-        )
-
-
-def validate_language(lang_code):
-    """
-    Check whether the currency can be properly handled by this plugin
-
-    :raises: :py:exc:`~.HTTPNotImplemented` if the currency is not valid
-    """
-    if lang_code in EXIMBAY_LANGUAGE:
-        raise HTTPNotImplemented(
-            _("Unsupported language '{0}' for Eximbay. Please contact the organisers").format(lang_code)
-        )
 
 
 def get_fgkey(exb_secret, data):
@@ -83,7 +57,7 @@ def get_fgkey(exb_secret, data):
     # A : Make sorted query with list type
     params = sorted(newData.items(), key=operator.itemgetter(0))
     
-    query = "&".join(["{}={}".format(key, value) for key, value in params])
+    query = "&".join( ("{}={}".format(key, value) for key, value in params) )
     
     # B: string concat secretkey and A with ? character
     sp = '%s?%s' % (exb_secret, query)
@@ -133,7 +107,6 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
     
     # Korea Domestic Card
     if isKOR:
-        transdata['lang'] = 'KR'
         transdata['issuercountry'] = 'KR'
     
     transdata['fgkey'] = get_fgkey(exb_secret, transdata)

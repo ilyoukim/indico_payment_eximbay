@@ -28,7 +28,8 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
-from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, get_transdata)
+from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, EXIMBAY_CURRENCY,
+                                         get_transdata)
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     """Eximbay Global
@@ -40,6 +41,9 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     settings_form = PluginSettingsForm
     #: form for configuration for specific events
     event_settings_form = EventSettingsForm
+    #: Set containing all valid currencies.
+    valid_currencies = EXIMBAY_CURRENCY
+    
     #: global default settings - should be a reasonable default
     default_settings = {
         'method_name': 'Eximbay for International credit card',
