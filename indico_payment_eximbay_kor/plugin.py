@@ -101,7 +101,7 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'paymethod': 'P000',                # Credit Card
             'mid': settings['account_id'],
             'lang': 'KR',                       # KR, EN, CN, JP
-            'issuercountry': 'KR',
+            'issuercountry': 'KR',              # Required parameter for Korea Domestic Card
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
