@@ -99,9 +99,9 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'ostype': 'P',                      # P:pc, M:mobile
             'displaytype': 'P',                 # P:popup, R:page redirect
             'paymethod': 'P000',                # Credit Card
-            'mid': settings['account_id'],
+            'issuercountry': 'KR',              # Essentials for using Korea Domestic Cards
             'lang': 'KR',                       # KR, EN, CN, JP
-            'issuercountry': 'KR',              # Required parameter for Korea Domestic Card
+            'mid': settings['account_id'],
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
