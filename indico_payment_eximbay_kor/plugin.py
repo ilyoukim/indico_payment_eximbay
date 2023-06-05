@@ -32,7 +32,7 @@ from indico_payment_eximbay_kor.util import (EXIMBAY_PP_BASIC_URL, EXIMBAY_CURRE
                                              get_transdata)
 
 class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Eximbay Domestic
+    """Eximbay Korean
 
     Provides an EPayment method using the Eximbay API.
     """
@@ -46,7 +46,7 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for Korea Domestic Cards',
+        'method_name': 'Eximbay for Korean Credit Cards',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
