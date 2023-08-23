@@ -10,6 +10,10 @@ they are automatically sent back to Indico.
 
 ### 3.0.1
 
+- Deactivation of Error Message Sending for Payment Failures
+
+### 3.0.1
+
 - for Korea domestic credit card
 
 ### 3.0
