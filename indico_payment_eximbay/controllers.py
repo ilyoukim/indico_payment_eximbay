@@ -75,7 +75,9 @@ class RHEximbayNotify(RH):
         assert_response = request.form
         try:
             # verify the signature of Eximbay for the transaction
-            self._verify_signature(assert_response)
+            if not self._verify_signature(assert_response):
+                return
+            
             if self._is_duplicate_transaction(assert_response):
                 # we have already handled the transaction
                 return
@@ -130,10 +132,13 @@ class RHEximbayNotify(RH):
             raise TransactionFailure(step='verification', details='fgkey is not corrected')
         
         if not data['rescode'] == '0000':
-            raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
+            # raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
+            return False
         
         # if not data['resmsg'] == 'Success.':
         #     raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
+        
+        return True
 
     def _is_duplicate_transaction(self, transaction_data):
         """Check if this transaction has already been recorded"""
