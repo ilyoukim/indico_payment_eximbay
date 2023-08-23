@@ -6,19 +6,6 @@ Eximbay API.
 When used, the user will be sent to Eximbay to make the payment, and afterwards
 they are automatically sent back to Indico.
 
-## Changelog
-
-### 3.0.2
-
-- Deactivation of Error Message Sending for Payment Failures
-
-### 3.0.1
-
-- for Korea domestic credit card
-
-### 3.0
-
-- Initial release for Indico 3.2
 
 ## Installation
 pip install git+https://{git_server}/indico_payment_eximbay.git
