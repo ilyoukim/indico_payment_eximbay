@@ -8,7 +8,7 @@ they are automatically sent back to Indico.
 
 ## Changelog
 
-### 3.0.1
+### 3.0.2
 
 - Deactivation of Error Message Sending for Payment Failures
 
