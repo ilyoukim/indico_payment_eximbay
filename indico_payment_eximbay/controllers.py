@@ -18,11 +18,12 @@
 """
 Callbacks for asynchronous replies by the Eximbay service and to redirect the user
 """
-
+import time
 import requests
 from urllib.parse import urljoin, parse_qsl, urlsplit
 
 from flask import flash, redirect, request
+from flask_pluginengine import current_plugin
 
 from werkzeug.exceptions import BadRequest
 
@@ -35,6 +36,7 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay import _
 from indico_payment_eximbay.plugin import EximbayPaymentPlugin
+from indico_payment_eximbay.notifications import notify_payment_error
 from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
                                          get_fgkey, get_transdata)
 
@@ -66,6 +68,8 @@ class RHEximbayNotify(RH):
         """process the reply from Eximbay about the transaction."""
         if self.token is not None:
             self._process_confirmation()
+        else:
+            return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
     def _process_confirmation(self):
         """Process the confirmation response inside indico.
@@ -76,19 +80,142 @@ class RHEximbayNotify(RH):
         try:
             # verify the signature of Eximbay for the transaction
             if not self._verify_signature(assert_response):
+                # send error message to creator
                 return
             
+            # wait a bit to make sure the other request finished!
+            time.sleep(0.5)
+            
+            # we have already handled the transaction
             if self._is_duplicate_transaction(assert_response):
-                # we have already handled the transaction
                 return
-            elif self._confirm_transaction(assert_response):
-                # if this matches, the user completed the transaction as requested by Indico
-                self._verify_amount(assert_response)
-                self._register_payment(assert_response)
+            
+            if not self._confirm_transaction(assert_response):
+                # send error message to creator and registor
+                return
+            
+            # if this matches, the user completed the transaction as requested by Indico
+            if not self._verify_amount(assert_response):
+                # send error message to creator and registor
+                return
+            
+            self._register_payment(assert_response)
+        
         except TransactionFailure as err:
             EximbayPaymentPlugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
             raise
     
+    def _verify_signature(self, transaction_data):
+        """Verify the transaction data and signature with Eximbay
+        
+        Check fgkey from data with securitykey
+        """
+        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
+        
+        fgkey = get_fgkey(settings['account_securitykey'], transaction_data)
+        
+        if not settings['account_id'] == transaction_data['mid']:
+            flash(_('The Eximbay account ID is not matched!'), 'error')
+            return False
+        
+        if not fgkey == str(transaction_data['fgkey']):
+            flash(_('The Eximbay account security key is not corrected!'), 'error')
+            return False
+
+        return True
+    
+    def _verify_amount(self, assert_data):
+        """Verify the amount and currency of the payment.
+
+        Sends an email but still registers incorrect payments.
+        """
+        expected_amount = float(self.registration.price)
+        expected_currency = self.registration.currency
+        amount = float(assert_data['amt'])
+        currency = assert_data['cur']
+        if expected_amount == amount and expected_currency == currency:
+            return True
+        
+        EximbayPaymentPlugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
+                                      amount, currency, expected_amount, expected_currency)
+        notify_amount_inconsistency(self.registration, amount, currency)
+        return False
+
+    def _is_duplicate_transaction(self, transaction_data):
+        """Check if this transaction has already been recorded"""
+        prev_transaction = self.registration.transaction
+        if (not prev_transaction or
+            prev_transaction.provider != PROVIDER_EXIMBAY):
+            return False
+        
+        old = prev_transaction.data
+        new = transaction_data
+        
+        return (
+            old['ref'] == new['ref'] and
+            old['cur'] == new['cur'] and
+            old['transid'] == new['transid'] and
+            float(old['amt']) == float(new['amt'])
+        )
+
+    def _confirm_transaction(self, assert_data):
+        """Confirm to Eximbay server that the transaction is accepted
+        """
+        completion_data = {
+            'txntype': 'QUERY',
+            'keyfield': 'TRANSID'
+            }
+        
+        for key in ('ref', 'cur', 'amt', 'transid'):
+            completion_data[key] = assert_data.get(key)
+        
+        response = self._perform_request('confirm', completion_data)
+        try:
+            res = dict(parse_qsl(urlsplit(response.text).path))
+            
+            if assert_data['rescode'] == '0000' and res['rescode'] == '0000':
+                return res['status'] in ('SALE', 'AUTH')
+        
+        except:
+            raise TransactionFailure(step='response at confirm', details=response.text)
+        
+        notify_payment_error(self.registration, assert_data)
+        return False
+
+    def _verify_amount(self, assert_data):
+        """Verify the amount and currency of the payment.
+        
+        Sends an email but still registers incorrect payments.
+        """
+        expected_amount = float(self.registration.price)
+        expected_currency = self.registration.currency
+        amount = float(assert_data['amt'])
+        currency = assert_data['cur']
+        
+        if expected_amount == amount and expected_currency == currency:
+            return True
+        else:
+            EximbayPaymentPlugin.logger.warning("Payment doesn't match events fee: %s %s != %s %s",
+                                                amount, currency, expected_amount, expected_currency)
+            notify_amount_inconsistency(self.registration, amount, currency)
+            return False
+
+    def _register_payment(self, assert_data):
+        """Register the transaction as paid."""
+        ## remove not nessary params
+        keys = ['cardholder','email','cardno1','cardno4','authcode']
+        for key in keys:
+            assert_data.pop(key, None)
+        
+        register_transaction(
+            registration = self.registration,
+            amount = float(assert_data['amt']),
+            currency = assert_data['cur'],
+            action = TransactionAction.complete,
+            provider = PROVIDER_EXIMBAY,
+            data = assert_data
+        )
+
     def _perform_request(self, task, assert_data):
         """
         Helper for performing a request against Eximbay
@@ -117,94 +244,12 @@ class RHEximbayNotify(RH):
             raise TransactionFailure(step=task, details=response.text)
         return response
 
-    def _verify_signature(self, data):
-        """Verify the transaction data and signature with Eximbay
-        
-        Check fgkey from data with securitykey
+    def _send_error_notify(self, assert_data):
+        """Send error message to creator and registor
         """
-        settings = EximbayPaymentPlugin.event_settings.get_all(self.registration.registration_form.event)
+        rescode = str(assert_data['rescode'])
+        resmsg = str(assert_data['resmsg'])
         
-        if not settings['account_id'] == data['mid']:
-            raise TransactionFailure(step='verification', details='mismatched account ID')
-        
-        fgkey = get_fgkey(settings['account_securitykey'], data)
-        if not fgkey == str(data['fgkey']):
-            raise TransactionFailure(step='verification', details='fgkey is not corrected')
-        
-        if not data['rescode'] == '0000':
-            # raise TransactionFailure(step='verification', details='respone code error : %s' % data['rescode'])
-            return False
-        
-        # if not data['resmsg'] == 'Success.':
-        #     raise TransactionFailure(step='verification', details='respone message error : %s' % data['resmsg'])
-        
-        return True
-
-    def _is_duplicate_transaction(self, transaction_data):
-        """Check if this transaction has already been recorded"""
-        
-        prev_transaction = self.registration.transaction
-        if (not prev_transaction or
-            prev_transaction.provider != PROVIDER_EXIMBAY):
-            return False
-        
-        old = prev_transaction.data
-        new = transaction_data
-        return (
-            old['ref'] == new['ref'] and
-            old['cur'] == new['cur'] and
-            float(old['amt']) == float(new['amt'])
-        )
-
-    def _confirm_transaction(self, assert_data):
-        """Confirm to Eximbay server that the transaction is accepted
-        """
-        completion_data = {
-            'txntype': 'QUERY',
-            'keyfield': 'TRANSID'
-            }
-        
-        for key in ('ref', 'cur', 'amt', 'transid'):
-            completion_data[key] = assert_data.get(key)
-        
-        response = self._perform_request('confirm', completion_data)
-        try:
-            res = dict(parse_qsl(urlsplit(response.text).path))
-            if not res['rescode'] == '0000':
-                raise TransactionFailure(step='confirm transaction', details=res['rescode'])
-        except:
-            raise TransactionFailure(step='response at confirm', details=response.text)
-        
-        assert res['status'] in ('SALE', 'AUTH')
-        return True
-
-    def _verify_amount(self, assert_data):
-        """Verify the amount and currency of the payment.
-        
-        Sends an email but still registers incorrect payments.
-        """
-        expected_amount = float(self.registration.price)
-        expected_currency = self.registration.currency
-        amount = float(assert_data['amt'])
-        currency = assert_data['cur']
-        if expected_amount == amount and expected_currency == currency:
-            return True
-        
-        EximbayPaymentPlugin.logger.warning("Payment doesn't match events fee: %s %s != %s %s",
-                                            amount, currency, expected_amount, expected_currency)
-        notify_amount_inconsistency(self.registration, amount, currency)
-        return False
-
-    def _register_payment(self, assert_data):
-        """Register the transaction as paid."""
-        register_transaction(
-            registration = self.registration,
-            amount = float(assert_data['amt']),
-            currency = assert_data['cur'],
-            action = TransactionAction.complete,
-            provider = PROVIDER_EXIMBAY,
-            data = assert_data
-        )
 
 
 class RHEximbayReturn(RH):
@@ -232,7 +277,7 @@ class RHEximbayReturn(RH):
             else:
                 flash(_('Your payment has failed.'), 'info')
         except TransactionFailure:
-            flash(_('Your payment has failed.'), 'info')
+            flash(_('Your payment has failed.'), 'error')
         
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
 
