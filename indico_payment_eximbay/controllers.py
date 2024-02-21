@@ -175,7 +175,9 @@ class RHEximbayNotify(RH):
         if 'rescode' in assert_data and  'rescode' in res and \
             assert_data['rescode'] == '0000' and res['rescode'] == '0000':
             
-            self.registration.transaction.data = {}
+            if hasattr(self.registration.transaction, 'data'):
+                self.registration.transaction.data = {}
+            
             return res['status'] in ('SALE', 'AUTH')
         else:
             settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
