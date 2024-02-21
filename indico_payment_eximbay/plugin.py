@@ -52,6 +52,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey': None,
         'order_description': '{event_title}, {regform_title}, {user_name}',
         'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
+        'notification_mail': None
     }
     #: per event default settings - use the global settings
     default_event_settings = {
@@ -62,6 +63,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey': None,
         'order_description': None,
         'order_identifier': None,
+        'notification_mail': None
     }
     
     @property
@@ -99,7 +101,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'mid': settings['account_id'],
+            'mid': settings.get('account_id'),
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
@@ -112,7 +114,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(settings['account_securitykey'], transaction_data)
+        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
