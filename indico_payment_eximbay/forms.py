@@ -8,7 +8,7 @@
 import re
 
 from wtforms.fields import StringField, URLField
-from wtforms.validators import DataRequired, Optional, ValidationError
+from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 
 from indico.modules.events.payment import PaymentEventSettingsFormBase, PaymentPluginSettingsFormBase
 from indico.web.forms.fields import IndicoPasswordField
@@ -137,6 +137,15 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Supported placeholders: {}'
         ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
     )
+    notification_mail = StringField(
+        label=_('Notification Email'),
+        validators=[Optional(), Email(), Length(0, 50)],
+        description=_(
+            'Email address to receive notifications of failed transactions. '
+            "This is independent of Indico's own payment notifications. "
+            'Event managers will be able to override this.'
+        )
+    )
 
 
 class EventSettingsForm(PaymentEventSettingsFormBase):
@@ -184,4 +193,12 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             'The default identifier of each order for further processing. '
             'Supported placeholders: {}'
         ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
+    )
+    notification_mail = StringField(
+        label=_('Notification Email'),
+        validators=[DataRequired(), Email(), Length(0, 50)],
+        description=_(
+            'Email address to receive notifications of failed transactions. '
+            "This is independent of Indico's own payment notifications."
+        )
     )
