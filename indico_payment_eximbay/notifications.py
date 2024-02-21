@@ -8,38 +8,37 @@
 from indico.core.notifications import email_sender, make_email
 from indico.web.flask.templating import get_template_module
 
-
-def notify_payment_error(registration, data):
-    notify_payment_error_manager(registration, data)
-    notify_payment_error_register(registration, data)
+from indico_payment_eximbay.util import get_paymethod
 
 @email_sender
-def notify_payment_error_manager(registration, data):
+def notify_account_error(registration, data, to_address):
     event = registration.registration_form.event
-    to_list = event.creator.email
+    # to_list = event.creator.email
     
+    with event.creator.force_user_locale():
+        tpl = get_template_module('payment_eximbay:emails/payment_account_error_notify.html',
+                                  event=event, registration=registration, data=data)
+        return make_email(to_address, template=tpl, html=True)
+
+@email_sender
+def notify_payment_error_manager(registration, data, to_address):
+    event = registration.registration_form.event
+    paymethod = get_paymethod(data['paymethod'])
+
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/payment_error_notify_manager.html',
                                   event=event, registration=registration, data=data,
-                                  errCode=data['rescode'], errMsg=data['resmsg'])
-        return make_email(to_list, template=tpl, html=True)
+                                  paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
+        return make_email(to_address, template=tpl, html=True)
 
 @email_sender
 def notify_payment_error_register(registration, data):
     event = registration.registration_form.event
     to_list = registration.email
+    paymethod = get_paymethod(data['paymethod'])
     
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/payment_error_notify_register.html',
                                   event=event, registration=registration, data=data,
-                                  errCode=data['rescode'], errMsg=data['resmsg'])
+                                  paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
         return make_email(to_list, template=tpl, html=True)
-
-# @email_sender
-# def notify_amount_inconsistency(registration, amount, currency):
-#     event = registration.registration_form.event
-#     to = event.creator.email
-#     with event.creator.force_user_locale():
-#         tpl = get_template_module('events/payment/emails/error_notify.txt',
-#                                   event=event, registration=registration, amount=amount, currency=currency)
-#         return make_email(to, template=tpl)
