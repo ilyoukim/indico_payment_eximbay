@@ -21,8 +21,8 @@
                 <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>e-mail: {{ registration.email }}</li>
                 <li>Paymethod: {{ paymethod }}</li>
-                <li>Error code: {{ errCode }}</li>
-                <li>Error message: {{ errMsg }}</li>
+                <li>Code: {{ errCode }}</li>
+                <li>Message: {{ errMsg }}</li>
             </ul>
             {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
