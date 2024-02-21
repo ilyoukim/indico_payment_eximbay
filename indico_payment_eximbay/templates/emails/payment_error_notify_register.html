@@ -1,0 +1,50 @@
+{% extends 'emails/base_i18n.html' %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block subject -%}
+    {% trans %}Eximbay Payment error{% endtrans %}
+{%- endblock %}
+
+{% block body -%}
+    <p>
+        Dear manager of the event: {{ event.title }},
+    </p>
+
+    <div class="content" style="padding: 10px 20px; color: #555;">
+        <p>
+        It appears that the payment of the registration with ID {{ registration.friendly_id }} has been failed.
+        </p>
+        <p>
+            <ul>
+                <li>{%- trans %}ID:{% endtrans -%} {{ registration.friendly_id }}</li>
+                <li>{%- trans %}name:{% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>{%- trans %}e-mail:{% endtrans -%} {{ registration.email }}</li>-
+
+                <li>{%- trans %}code:{% endtrans -%} {{ errCode }}</li>
+                <li>{%- trans %}message:{% endtrans -%} {{ errMsg }}</li>
+            </ul>
+            {%- trans %}Detailed information check on this page:{% endtrans -%}<br>
+            <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
+        </p>
+        
+        <p>registration</p>
+        <ul>
+            {% for key, value in registration.items() %}
+                <li>"{{ key }}": "{{ value }}"</li>
+            {% endfor %}
+        </ul>
+
+        <p>
+        Please, check with the registrant to see if there was some misunderstanding.
+        </p>
+    </div>
+
+    <p>
+        <div>
+            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
+            {link}
+            {{ registration.locator.registrant }}
+        </div>
+    </p>
+{%- endblock %}

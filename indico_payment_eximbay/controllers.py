@@ -84,7 +84,7 @@ class RHEximbayNotify(RH):
                 return
             
             # wait a bit to make sure the other request finished!
-            time.sleep(0.5)
+            #time.sleep(0.5)
             
             # we have already handled the transaction
             if self._is_duplicate_transaction(assert_response):
@@ -202,10 +202,14 @@ class RHEximbayNotify(RH):
 
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
+        save_data = {}
+        save_data.update(assert_data)
+        
         ## remove not nessary params
         keys = ['cardholder','email','cardno1','cardno4','authcode']
+        
         for key in keys:
-            assert_data.pop(key, None)
+            save_data.pop(key, None)
         
         register_transaction(
             registration = self.registration,
@@ -213,7 +217,7 @@ class RHEximbayNotify(RH):
             currency = assert_data['cur'],
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
-            data = assert_data
+            data = save_data
         )
 
     def _perform_request(self, task, assert_data):
@@ -243,13 +247,6 @@ class RHEximbayNotify(RH):
         except requests.HTTPError:
             raise TransactionFailure(step=task, details=response.text)
         return response
-
-    def _send_error_notify(self, assert_data):
-        """Send error message to creator and registor
-        """
-        rescode = str(assert_data['rescode'])
-        resmsg = str(assert_data['resmsg'])
-        
 
 
 class RHEximbayReturn(RH):
