@@ -28,7 +28,6 @@ def notify_payment_error_manager(registration, data):
 def notify_payment_error_register(registration, data):
     event = registration.registration_form.event
     to_list = registration.email
-    to_list = registration.email
     
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/payment_error_notify_register.html',
