@@ -75,7 +75,7 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         from indico_payment_eximbay_kor.blueprint import blueprint
         return blueprint
 
-    def _get_transaction_parameters(self, data):
+    def _get_transaction_parameters(self, data, isKOR=False):
         """Get parameters for creating a transaction request."""
         event = data['event']
         settings = data['event_settings']
@@ -101,7 +101,6 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'issuercountry': 'KR',              # Essentials for using Korea Domestic Cards
             'mid': settings.get('account_id'),
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
@@ -115,7 +114,7 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay_kor.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data)
+        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data, isKOR=isKOR)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
