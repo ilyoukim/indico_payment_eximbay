@@ -22,19 +22,28 @@ def notify_account_error(registration, data, to_address):
 
 @email_sender
 def notify_payment_error_manager(registration, data, to_address):
+    ## not nessary params
+    keys = ['ref','amt','cur','accesscountry','paymethod','email','resdt','transid','rescode','resmsg']
+    
+    newdata = {}
+    for key in data:
+        if key not in keys:
+            newdata[key] = data.get(key)
+    
     event = registration.registration_form.event
     paymethod = get_paymethod(data['paymethod'])
 
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/payment_error_notify_manager.html',
-                                  event=event, registration=registration, data=data,
+                                  event=event, registration=registration, data=newdata,
                                   paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
         return make_email(to_address, template=tpl, html=True)
 
 @email_sender
 def notify_payment_error_register(registration, data):
     event = registration.registration_form.event
-    to_list = registration.email
+    to_list = list(set(registration.email, data.get('email')))
+    
     paymethod = get_paymethod(data['paymethod'])
     
     with event.creator.force_user_locale():
