@@ -3,7 +3,7 @@
 {% block footer %}{% endblock %}
 
 {% block subject -%}
-    {% trans %}Eximbay Payment error{% endtrans %}
+{% trans %}Eximbay Payment error{% endtrans %}
 {%- endblock %}
 
 {% block body -%}
@@ -13,7 +13,7 @@
 
     <div class="content">
         <p>
-        It appears that the payment of the registration with ID {{ registration.friendly_id }} has been failed.
+        It appears that the payment has been failed due to the account ID is not matched.
         </p>
         <p>
             <ul>
@@ -22,7 +22,6 @@
                 <li>{%- trans %}Name: {% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>{%- trans %}e-mail: {% endtrans -%} {{ registration.email }}</li>
 
-                <li>{%- trans %}Paymethod: {% endtrans -%} {{ paymethod }}</li>
                 <li>{%- trans %}Code: {% endtrans -%} {{ errCode }}</li>
                 <li>{%- trans %}Message: {% endtrans -%} {{ errMsg }}</li>
             </ul>

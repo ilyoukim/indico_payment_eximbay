@@ -21,6 +21,7 @@
                 <li>{%- trans %}name:{% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>{%- trans %}e-mail:{% endtrans -%} {{ registration.email }}</li>-
 
+                <li>{%- trans %}Paymethod: {% endtrans -%} {{ paymethod }}</li>
                 <li>{%- trans %}code:{% endtrans -%} {{ errCode }}</li>
                 <li>{%- trans %}message:{% endtrans -%} {{ errMsg }}</li>
             </ul>
@@ -28,13 +29,6 @@
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
         </p>
         
-        <p>registration</p>
-        <ul>
-            {% for key, value in registration.items() %}
-                <li>"{{ key }}": "{{ value }}"</li>
-            {% endfor %}
-        </ul>
-
         <p>
         Please, check with the registrant to see if there was some misunderstanding.
         </p>
