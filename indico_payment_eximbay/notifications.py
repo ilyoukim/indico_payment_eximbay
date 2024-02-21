@@ -22,12 +22,12 @@ def notify_account_error(registration, data, to_address):
 
 @email_sender
 def notify_payment_error_manager(registration, data, to_address):
-    ## not nessary params
+    ## minimum params
     keys = ['ref','amt','cur','accesscountry','paymethod','email','resdt','transid','rescode','resmsg']
     
     newdata = {}
     for key in data:
-        if key not in keys:
+        if key in keys:
             newdata[key] = data.get(key)
     
     event = registration.registration_form.event
@@ -42,7 +42,8 @@ def notify_payment_error_manager(registration, data, to_address):
 @email_sender
 def notify_payment_error_register(registration, data):
     event = registration.registration_form.event
-    to_list = list(set(registration.email, data.get('email')))
+    to_list = (registration.email, data.get('email'))
+    to_list = list(set(to_list))
     
     paymethod = get_paymethod(data['paymethod'])
     
