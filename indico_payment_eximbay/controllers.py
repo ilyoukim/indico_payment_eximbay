@@ -18,7 +18,7 @@
 """
 Callbacks for asynchronous replies by the Eximbay service and to redirect the user
 """
-import time
+
 import requests
 from urllib.parse import urljoin, parse_qsl, urlsplit
 
@@ -34,12 +34,12 @@ from indico.modules.events.registration.models.registrations import Registration
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
-from indico_payment_eximbay import _
+from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
+                                         get_fgkey, get_transdata)
 from indico_payment_eximbay.notifications import (notify_payment_error_manager,
                                                   notify_payment_error_register,
                                                   notify_account_error)
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
-                                         get_fgkey, get_transdata)
+from indico_payment_eximbay import _
 
 
 class TransactionFailure(Exception):
@@ -81,14 +81,12 @@ class RHEximbayNotify(RH):
         try:
             # verify the signature of Eximbay for the transaction
             if not self._verify_signature(assert_response):
-                # send error message to manager
                 return
             
             # we have already handled the transaction
             if self._is_duplicate_transaction(assert_response):
                 return
             
-            # time.sleep(2)
             if not self._confirm_transaction(assert_response):
                 # send error message to manager and registor
                 return
