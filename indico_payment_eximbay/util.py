@@ -24,6 +24,7 @@ from indico_payment_eximbay import _
 
 # Eximbay API details
 EXIMBAY_API_SPEC = '2.3'
+EXIMBAY_API_VERSION = '230'
 EXIMBAY_PP_BASIC_URL = '/Gateway/BasicProcessor.krp'
 EXIMBAY_PP_DIRECT_URL = '/Gateway/DirectProcessor.krp'
 
@@ -51,8 +52,8 @@ def get_fgkey(exb_secret, data):
     newData = {}
     newData.update(data)
     
-    if 'fgkey' in newData:
-        del newData['fgkey']
+    # remove fgkey
+    newData.pop('fgkey', None)
     
     # A : Make sorted query with list type
     params = sorted(newData.items(), key=operator.itemgetter(0))
@@ -78,11 +79,12 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
         'charset': 'UTF-8',                 ## default
         'ver': '230',                       ## eximbay version
         'txntype': 'PAYMENT',               # message type: PAYMENT, QUERY
-        'ostype': 'P',                      # P:pc, M:mobile
+        'ostype': 'P',                      # P:pc (default), M:mobile
         'displaytype': 'P',                 # P:popup, R:page redirect
         'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
-        'mid': exim_account_id,
         'lang': display_language,           # KR, EN, CN, JP
+        'issuercountry': country,           # Nessary for Korea domestic credit card
+        'mid': exim_account_id,
         'ref': order_identifier,            # orderId : unique value
         'amt': registration_price,
         'cur': registration_currency,
@@ -95,19 +97,23 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
         'statusurl': status_post_url,       # where to asynchronously call back from Eximbay
         }
     """
-    transdata = {}
     
-    if not 'charset' in assert_data:
-        transdata['charset'] = 'UTF-8'
-    
-    if not 'ver' in assert_data:
-        transdata['ver'] = '230'
-
-    transdata.update(assert_data)
+    transdata = {
+            'charset': 'UTF-8',
+            'ver': EXIMBAY_API_VERSION,
+            'txntype': 'PAYMENT',
+            'ostype': 'P',                      # P:pc, M:mobile
+            'displaytype': 'P',                 # P:popup, R:page redirect
+            'paymethod': 'P000',                # Credit Card
+            'lang': 'EN',                       # KR, EN, CN, JP
+        }
     
     # Korea Domestic Card
     if isKOR:
+        transdata['lang'] = 'KR'
         transdata['issuercountry'] = 'KR'
+    
+    transdata.update(assert_data)
     
     transdata['fgkey'] = get_fgkey(exb_secret, transdata)
     

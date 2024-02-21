@@ -1,5 +1,6 @@
 {% trans %}
     Clicking on the <strong>Pay Now</strong> button you will get redirected to the Eximbay site in order to complete your transaction.</br>
+    For security reasons, payments are accepted only when the card's issuing country matches the payment country.</br>
     *Available international credit cards: VISA, MASTER, AMEX, JCB, UnionPay</br>
     **This payment method is provided by Eximbay and is billed as <u>www.eximbay.com</u>.
 {% endtrans %}
@@ -16,25 +17,9 @@
     <dt></dt>
     <dd>
         <form action="{{ payment_url }}" method="POST">
-            <input type="hidden" name="ver" value="{{ eximbay.ver }}">
-            <input type="hidden" name="txntype" value="{{ eximbay.txntype }}">
-            <input type="hidden" name="charset" value="{{ eximbay.charset }}">
-            <input type="hidden" name="ostype" value="{{ eximbay.ostype }}">
-            <input type="hidden" name="displaytype" value="{{ eximbay.displaytype }}">
-            <input type="hidden" name="paymethod" value="{{ eximbay.paymethod }}">
-            <input type="hidden" name="mid" value="{{ eximbay.mid }}">
-            <input type="hidden" name="lang" value="{{ eximbay.lang }}">
-            <input type="hidden" name="ref" value="{{ eximbay.ref }}">
-            <input type="hidden" name="amt" value="{{ eximbay.amt }}">
-            <input type="hidden" name="cur" value="{{ eximbay.cur }}">
-            <input type="hidden" name="buyer" value="{{ eximbay.buyer }}">
-            <input type="hidden" name="email" value="{{ eximbay.email }}">
-            <input type="hidden" name="item_0_product" value="{{ eximbay.item_0_product }}">
-            <input type="hidden" name="item_0_quantity" value="{{ eximbay.item_0_quantity }}">
-            <input type="hidden" name="item_0_unitPrice" value="{{ eximbay.item_0_unitPrice }}">
-            <input type="hidden" name="returnurl" value="{{ eximbay.returnurl }}">
-            <input type="hidden" name="statusurl" value="{{ eximbay.statusurl }}">
-            <input type="hidden" name="fgkey" value="{{ eximbay.fgkey }}">
+            {% for key, value in eximbay.items() %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+            {% endfor %}
             <button type="submit">{% trans %}Pay Now{% endtrans %}</button>
         </form>
     </dd>

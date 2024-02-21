@@ -99,11 +99,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'txntype': 'PAYMENT',
-            'ostype': 'P',                      # P:pc, M:mobile
-            'displaytype': 'P',                 # P:popup, R:page redirect
-            'paymethod': 'P000',                # Credit Card
-            'lang': 'EN',                       # KR, EN, CN, JP
             'mid': settings['account_id'],
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
