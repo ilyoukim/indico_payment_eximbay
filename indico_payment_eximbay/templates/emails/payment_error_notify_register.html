@@ -1,0 +1,38 @@
+{% extends 'emails/base_i18n.html' %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block subject -%}
+    {% trans %}Your Payment has failed{% endtrans %}
+{%- endblock %}
+
+{% block body -%}
+    <p>
+        Dear {{ registration.first_name }},
+    </p>
+
+    <div class="content">
+        <p>
+        It appears that the payment of the registration has been failed.
+        </p>
+        <p>
+            <ul>
+                <li>Event: {{ event.title }}</li>
+                <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>e-mail: {{ registration.email }}</li>
+                <li>Paymethod: {{ paymethod }}</li>
+                <li>Error code: {{ errCode }}</li>
+                <li>Error message: {{ errMsg }}</li>
+            </ul>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
+            <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
+        </p>
+
+        <p>
+            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
+            {% trans url=registration.display_regform_url, link='<a href="%s">'|format(registration.display_regform_url)|safe, endlink='</a>'|safe -%}
+            {{ link }} {{ url }} {{ endlink }}
+            {%- endtrans %}
+        </p>
+    </div>
+{%- endblock %}

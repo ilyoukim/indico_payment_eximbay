@@ -1,0 +1,48 @@
+{% extends 'emails/base_i18n.html' %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block subject -%}
+{% trans %}Eximbay Payment error{% endtrans %}
+{%- endblock %}
+
+{% block body -%}
+    <p>
+        Dear manager of the event: {{ event.title }},
+    </p>
+
+    <div class="content">
+        <p>
+        It appears that the payment has been failed due to the account ID is not matched.
+        </p>
+        <p>
+            <ul>
+                <li>{%- trans %}Event: {% endtrans -%} {{ event.title }}</li>
+                <li>{%- trans %}ID: {% endtrans -%} {{ registration.friendly_id }}</li>
+                <li>{%- trans %}Name: {% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>{%- trans %}e-mail: {% endtrans -%} {{ registration.email }}</li>
+
+                <li>{%- trans %}Code: {% endtrans -%} {{ errCode }}</li>
+                <li>{%- trans %}Message: {% endtrans -%} {{ errMsg }}</li>
+            </ul>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
+            <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
+        </p>
+        
+        <p>
+            transfered data
+            <ul>
+            {% for key, value in data.items() %}
+                <li>"{{ key }}": "{{ value }}"</li>
+            {% endfor %}
+            </ul>
+        </p>
+
+        <p>
+            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
+            {% trans url=registration.display_regform_url, link='<a href="%s">'|format(registration.display_regform_url)|safe, endlink='</a>'|safe -%}
+            {{ link }} {{ url }} {{ endlink }}
+            {%- endtrans %}
+        </p>
+    </div>
+{%- endblock %}

@@ -32,7 +32,7 @@ from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, EXIMBAY_CURRENCY,
                                          get_transdata)
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Eximbay Global
+    """Eximbay
 
     Provides an EPayment method using the Eximbay API.
     """
@@ -46,12 +46,13 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for International credit cards',
+        'method_name': 'Eximbay',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
         'order_description': '{event_title}, {regform_title}, {user_name}',
         'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
+        'notification_mail': None
     }
     #: per event default settings - use the global settings
     default_event_settings = {
@@ -62,6 +63,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey': None,
         'order_description': None,
         'order_identifier': None,
+        'notification_mail': None
     }
     
     @property
@@ -73,7 +75,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
-    def _get_transaction_parameters(self, data):
+    def _get_transaction_parameters(self, data, isKor=False):
         """Get parameters for creating a transaction request."""
         event = data['event']
         settings = data['event_settings']
@@ -99,12 +101,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'txntype': 'PAYMENT',
-            'ostype': 'P',                      # P:pc, M:mobile
-            'displaytype': 'P',                 # P:popup, R:page redirect
-            'paymethod': 'P000',                # Credit Card
-            'lang': 'EN',                       # KR, EN, CN, JP
-            'mid': settings['account_id'],
+            'mid': settings.get('account_id'),
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
@@ -117,7 +114,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(settings['account_securitykey'], transaction_data)
+        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data, isKor)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
@@ -131,5 +128,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         base_url = data['event_settings']['url']
         
         data['eximbay'] = self._get_transaction_parameters(data)
+        data['eximbay_kor'] = self._get_transaction_parameters(data, True)
         data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
 

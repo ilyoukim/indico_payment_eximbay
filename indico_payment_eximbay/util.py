@@ -24,6 +24,7 @@ from indico_payment_eximbay import _
 
 # Eximbay API details
 EXIMBAY_API_SPEC = '2.3'
+EXIMBAY_API_VERSION = '230'
 EXIMBAY_PP_BASIC_URL = '/Gateway/BasicProcessor.krp'
 EXIMBAY_PP_DIRECT_URL = '/Gateway/DirectProcessor.krp'
 
@@ -36,6 +37,77 @@ EXIMBAY_CURRENCY = {'KRW','USD','EUR','GBP','JPY','THB','SGD','RUB','HKD','CAD',
 # Support Language : Eximbay manual - Appendix B
 EXIMBAY_LANGUAGE = {'KR','EN','CN','JP','RU','TH','TW','VN'}
 
+EXIMBAY_PAYMETHOD = {
+    "P000": "Credit Card",
+    "P101": "VISA",
+    "P102": "MasterCard",
+    "P103": "AMEX",
+    "P104": "JCB",
+    "P105": "CUP(UnionPay 2D)",
+    "P106": "Diners",
+    "P107": "Discover",
+    "P108": "Mir",
+    "P001": "PayPal",
+    "P002": "CUP(UnionPay)",
+    "P003": "Alipay or Alipay Plus",
+    "P174": "Alipay Plus(Alipay_CN)",
+    "P175": "Alipay Plus(TRUEMONEY)",
+    "P176": "Alipay Plus(DANA)",
+    "P177": "Alipay Plus(Alipay_HK)",
+    "P178": "Alipay Plus(TNG)",
+    "P179": "Alipay Plus(GCASH)",
+    "P141": "WeChat(PC)",
+    "P142": "WeChat(Mobile)",
+    "P143": "WeChat(POP)",
+    "P144": "WeChat(MINI)",
+    "P006": "Japanese Convenience Store, Internet Banking Payment",
+    "P171": "Razer Merchant Services(Malaysia)",
+    "P172": "Razer Merchant Services(Vietnam)",
+    "P173": "Razer Merchant Services(Thailand)",
+    "P011": "YooMoney",
+    "PG01": "2C2P",
+    "P185": "GrabPay(SGD)",
+    "P189": "GrabPay(MYR)",
+    "P190": "GrabPay(PHP)",
+    "P186": "LinePay(2C2P)",
+    "P194": "LinePay(eContext)",
+    "P110": "BC Card",
+    "P111": "KB Card",
+    "P112": "HANA Card",
+    "P113": "SAMSUNG Card",
+    "P114": "SHINHAN Card",
+    "P115": "HYUNDAI Card",
+    "P116": "LOTTE Card",
+    "P117": "NONGHYEOP Card",
+    "P119": "CITI Card",
+    "P120": "WOORI Card",
+    "P121": "SUHYEOP Card",
+    "P122": "JEJU Card",
+    "P123": "JEONBUK Card",
+    "P124": "GWANGJU Card",
+    "P125": "KAKAOBANK",
+    "P126": "KBANK",
+    "P127": "MIRAEASSET",
+    "P128": "KONA Card",
+    "P129": "TOSS Card",
+    "P130": "CHAI Card",
+    "P301": "BANK PAY",
+    "P302": "KAKAO PAY",
+    "P303": "TOSS",
+    "P304": "PAYCO",
+    "P305": "Virtual Account",
+    "P306": "SMILE PAY",
+    "P015": "NAVER PAY(CARD & POINT)",
+    "P307": "NAVER PAY(CARD)",
+    "P308": "NAVER PAY(POINT)",
+}
+
+
+def get_paymethod(code):
+    if code in EXIMBAY_PAYMETHOD:
+        return EXIMBAY_PAYMETHOD.get(code)
+    else:
+        return code
 
 def get_fgkey(exb_secret, data):
     """Specific function for Eximbay
@@ -51,8 +123,8 @@ def get_fgkey(exb_secret, data):
     newData = {}
     newData.update(data)
     
-    if 'fgkey' in newData:
-        del newData['fgkey']
+    # remove fgkey
+    newData.pop('fgkey', None)
     
     # A : Make sorted query with list type
     params = sorted(newData.items(), key=operator.itemgetter(0))
@@ -78,11 +150,12 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
         'charset': 'UTF-8',                 ## default
         'ver': '230',                       ## eximbay version
         'txntype': 'PAYMENT',               # message type: PAYMENT, QUERY
-        'ostype': 'P',                      # P:pc, M:mobile
+        'ostype': 'P',                      # P:pc (default), M:mobile
         'displaytype': 'P',                 # P:popup, R:page redirect
         'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
-        'mid': exim_account_id,
         'lang': display_language,           # KR, EN, CN, JP
+        'issuercountry': country,           # Nessary for Korea domestic credit card
+        'mid': exim_account_id,
         'ref': order_identifier,            # orderId : unique value
         'amt': registration_price,
         'cur': registration_currency,
@@ -95,19 +168,23 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
         'statusurl': status_post_url,       # where to asynchronously call back from Eximbay
         }
     """
-    transdata = {}
     
-    if not 'charset' in assert_data:
-        transdata['charset'] = 'UTF-8'
-    
-    if not 'ver' in assert_data:
-        transdata['ver'] = '230'
-
-    transdata.update(assert_data)
+    transdata = {
+            'charset': 'UTF-8',
+            'ver': EXIMBAY_API_VERSION,
+            'txntype': 'PAYMENT',
+            'ostype': 'P',                      # P:pc, M:mobile
+            'displaytype': 'P',                 # P:popup, R:page redirect
+            'paymethod': 'P000',                # Credit Card
+            'lang': 'EN',                       # KR, EN, CN, JP
+        }
     
     # Korea Domestic Card
     if isKOR:
+        transdata['lang'] = 'KR'
         transdata['issuercountry'] = 'KR'
+    
+    transdata.update(assert_data)
     
     transdata['fgkey'] = get_fgkey(exb_secret, transdata)
     
