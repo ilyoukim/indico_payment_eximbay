@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [3.1.0] 2024-02-21
+
+- Error message notification feature for users in case of payment failure
+
 ## [3.0.2] 2023-08-23
 
 - Deactivation of Error Message Sending for Payment Failures

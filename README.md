@@ -1,14 +1,19 @@
 # Eximbay Payment Plugin
 
-This plugin provides a payment option for Indico's payment module using the
-Eximbay API.
+This plugin provides a payment option for Indico's payment module using the Eximbay API.
 
-When used, the user will be sent to Eximbay to make the payment, and afterwards
-they are automatically sent back to Indico.
+When used, the user will be sent to Eximbay to make the payment,
+ and afterwards they are automatically sent back to Indico.
 
 
 ## Installation
 pip install git+https://{git_server}/indico_payment_eximbay.git
+
+- indico db --all-plugins upgrade
+
+- touch ~/web/indico.wsgi
+
+- sudo systemctl restart indico-celery.service
 
 
 ## Development test information
