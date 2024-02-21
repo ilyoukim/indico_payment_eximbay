@@ -3,7 +3,7 @@
 {% block footer %}{% endblock %}
 
 {% block subject -%}
-    {% trans %}Eximbay Payment error{% endtrans %}
+    {% trans %}Your Payment has failed{% endtrans %}
 {%- endblock %}
 
 {% block body -%}
@@ -17,13 +17,11 @@
         </p>
         <p>
             <ul>
-                <li>{%- trans %}ID:{% endtrans -%} {{ registration.friendly_id }}</li>
-                <li>{%- trans %}name:{% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
-                <li>{%- trans %}e-mail:{% endtrans -%} {{ registration.email }}</li>-
-
-                <li>{%- trans %}Paymethod: {% endtrans -%} {{ paymethod }}</li>
-                <li>{%- trans %}code:{% endtrans -%} {{ errCode }}</li>
-                <li>{%- trans %}message:{% endtrans -%} {{ errMsg }}</li>
+                <li>name: {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>e-mail: {{ registration.email }}</li>
+                <li>Paymethod: {{ paymethod }}</li>
+                <li>code: {{ errCode }}</li>
+                <li>message: {{ errMsg }}</li>
             </ul>
             {%- trans %}Detailed information check on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>

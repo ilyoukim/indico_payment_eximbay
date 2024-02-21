@@ -17,14 +17,12 @@
         </p>
         <p>
             <ul>
-                <li>{%- trans %}Event: {% endtrans -%} {{ event.title }}</li>
-                <li>{%- trans %}ID: {% endtrans -%} {{ registration.friendly_id }}</li>
-                <li>{%- trans %}Name: {% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
-                <li>{%- trans %}e-mail: {% endtrans -%} {{ registration.email }}</li>
-
-                <li>{%- trans %}Paymethod: {% endtrans -%} {{ paymethod }}</li>
-                <li>{%- trans %}Code: {% endtrans -%} {{ errCode }}</li>
-                <li>{%- trans %}Message: {% endtrans -%} {{ errMsg }}</li>
+                <li>Event: {{ event.title }}</li>
+                <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>e-mail: {{ registration.email }}</li>
+                <li>Paymethod: {{ paymethod }}</li>
+                <li>Code: {{ errCode }}</li>
+                <li>Message: {{ errMsg }}</li>
             </ul>
             {%- trans %}Detailed information check on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
@@ -34,7 +32,7 @@
             transfered data
             <ul>
             {% for key, value in data.items() %}
-                <li>"{{ key }}": "{{ value }}"</li>
+                <li>{{ key }}: {{ value }}</li>
             {% endfor %}
             </ul>
         </p>
