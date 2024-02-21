@@ -175,8 +175,8 @@ class RHEximbayNotify(RH):
         if 'rescode' in assert_data and  'rescode' in res and \
             assert_data['rescode'] == '0000' and res['rescode'] == '0000':
             
-            if hasattr(self.registration.transaction, 'data'):
-                self.registration.transaction.data = {}
+            #if hasattr(self.registration.transaction, 'data'):
+            #    self.registration.transaction.data = {}
             
             return res['status'] in ('SALE', 'AUTH')
         else:
@@ -189,7 +189,9 @@ class RHEximbayNotify(RH):
                 if key in assert_data:
                     data[key] = assert_data.get(key)
             
-            self.registration.transaction.data = data
+            #if hasattr(self.registration.transaction, 'data'):
+            #    self.registration.transaction.data = data
+            
             notify_payment_error_manager(self.registration, assert_data, manager_email)
             notify_payment_error_register(self.registration, assert_data)
             return False
