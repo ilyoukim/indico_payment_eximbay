@@ -4,8 +4,7 @@
         For security reasons, payments are accepted only when the card's issuing country matches the payment country.
     </p>
     <p>
-        *Available international credit cards: VISA, MASTER, AMEX, JCB, UnionPay</br>
-        **This payment method is provided by Eximbay and is billed as <u>www.eximbay.com</u>.
+        *This payment method is provided by Eximbay and is billed as <u>www.eximbay.com</u>.
     </p>
 {% endtrans %}
 
@@ -18,13 +17,38 @@
     <dd>{{ eximbay.item_0_product }}</dd>
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
-    <dt></dt>
-    <dd>
-        <form action="{{ payment_url }}" method="POST">
-            {% for key, value in eximbay.items() %}
-                <input type="hidden" name="{{ key }}" value="{{ value }}">
-            {% endfor %}
-            <button type="submit">{% trans %}Pay Now{% endtrans %}</button>
-        </form>
-    </dd>
 </dl>
+
+
+<table class="i-table">
+    <thead>
+        <tr>
+            <th>
+                VISA, MASTER, AMEX, JCB, UnionPay
+            </th>
+            <th>
+                Issued in South Korea and digital wallets
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <form action="{{ payment_url }}" method="POST">
+                    {% for key, value in eximbay.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                    <button type="submit" class="action-button">{% trans %}Pay Now: International{% endtrans %}</button>
+                </form>
+            </td>
+            <td>
+                <form action="{{ payment_url }}" method="POST">
+                    {% for key, value in eximbay_kor.items() %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endfor %}
+                    <button type="submit" class="action-button">{% trans %}Pay Now: South Korea{% endtrans %}</button>
+                </form>
+            </td>
+        </tr>
+    </tbody>
+</table>

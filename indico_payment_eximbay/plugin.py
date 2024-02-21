@@ -32,7 +32,7 @@ from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, EXIMBAY_CURRENCY,
                                          get_transdata)
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
-    """Eximbay Global
+    """Eximbay
 
     Provides an EPayment method using the Eximbay API.
     """
@@ -46,7 +46,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay for International credit cards',
+        'method_name': 'Eximbay',
         'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
@@ -75,7 +75,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
-    def _get_transaction_parameters(self, data):
+    def _get_transaction_parameters(self, data, isKor=False):
         """Get parameters for creating a transaction request."""
         event = data['event']
         settings = data['event_settings']
@@ -114,7 +114,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data)
+        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data, isKor)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
@@ -128,5 +128,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         base_url = data['event_settings']['url']
         
         data['eximbay'] = self._get_transaction_parameters(data)
+        data['eximbay_kor'] = self._get_transaction_parameters(data, True)
         data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
 

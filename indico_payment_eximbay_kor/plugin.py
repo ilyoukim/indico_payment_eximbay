@@ -128,5 +128,6 @@ class EximbayKorPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         base_url = data['event_settings']['url']
         
         data['eximbay'] = self._get_transaction_parameters(data)
+        data['eximbay_kor'] = self._get_transaction_parameters(data, isKOR=True)
         data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
 
