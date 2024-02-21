@@ -8,20 +8,21 @@
 
 {% block body -%}
     <p>
-        Dear manager of the event: {{ event.title }},
+        Dear {{ registration.first_name }},
     </p>
 
-    <div class="content" style="padding: 10px 20px; color: #555;">
+    <div class="content">
         <p>
-        It appears that the payment of the registration with ID {{ registration.friendly_id }} has been failed.
+        It appears that the payment of the registration has been failed.
         </p>
         <p>
             <ul>
-                <li>name: {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>Event: {{ event.title }}</li>
+                <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>e-mail: {{ registration.email }}</li>
                 <li>Paymethod: {{ paymethod }}</li>
-                <li>code: {{ errCode }}</li>
-                <li>message: {{ errMsg }}</li>
+                <li>Error code: {{ errCode }}</li>
+                <li>Error message: {{ errMsg }}</li>
             </ul>
             {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
