@@ -24,10 +24,17 @@
                 <li>Code: {{ errCode }}</li>
                 <li>Message: {{ errMsg }}</li>
             </ul>
-            {%- trans %}Detailed information check on this page:{% endtrans -%}<br>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
         </p>
         
+        <p>
+            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
+            {% trans url=registration.display_regform_url, link='<a href="%s">'|format(registration.display_regform_url)|safe, endlink='</a>'|safe -%}
+            {{ link }} {{ url }} {{ endlink }}
+            {%- endtrans %}
+        </p>
+
         <p>
             transfered data
             <ul>
@@ -36,17 +43,5 @@
             {% endfor %}
             </ul>
         </p>
-
-        <p>
-        Please, check with the registrant to see if there was some misunderstanding.
-        </p>
     </div>
-
-    <p>
-        <div>
-            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
-            {link}
-            {{ registration.locator.registrant }}
-        </div>
-    </p>
 {%- endblock %}

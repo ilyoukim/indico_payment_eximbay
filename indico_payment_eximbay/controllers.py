@@ -181,6 +181,13 @@ class RHEximbayNotify(RH):
             settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
             manager_email = settings.get('notification_mail')
             
+            # store error code & message to notify
+            data = {}
+            for key in ['rescode','resmsg']:
+                if key in assert_data:
+                    data[key] = assert_data.get(key)
+            
+            self.registration.transaction.data = data
             notify_payment_error_manager(self.registration, assert_data, manager_email)
             notify_payment_error_register(self.registration, assert_data)
             return False
@@ -252,14 +259,21 @@ class RHEximbayReturn(RH):
             raise BadRequest
 
     def _process(self):
+        transaction = self.registration.transaction
         try:
-            if hasattr(self.registration.transaction, 'status') and \
-                self.registration.transaction.status == TransactionStatus.successful:
+            if hasattr(transaction, 'status') and \
+                transaction.status == TransactionStatus.successful:
                 flash(_('Your payment has been confirmed.'), 'success')
             else:
-                flash(_('Your payment has failed.'), 'info')
+                msg = 'Your payment has failed.'
+                if hasattr(transaction, 'data') and \
+                    'rescode' in transaction.data and \
+                    'resmsg' in transaction.data:
+                    msg = msg + ' [' + transaction.data['rescode'] + \
+                            '] ( ' + transaction.data['resmsg'] + ' )'
+                
+                flash(_(msg), 'info')
         except TransactionFailure:
             flash(_('Your payment has failed.'), 'error')
         
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
-

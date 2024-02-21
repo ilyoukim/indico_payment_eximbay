@@ -23,20 +23,15 @@
                 <li>code: {{ errCode }}</li>
                 <li>message: {{ errMsg }}</li>
             </ul>
-            {%- trans %}Detailed information check on this page:{% endtrans -%}<br>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
             <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
         </p>
-        
+
         <p>
-        Please, check with the registrant to see if there was some misunderstanding.
+            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
+            {% trans url=registration.display_regform_url, link='<a href="%s">'|format(registration.display_regform_url)|safe, endlink='</a>'|safe -%}
+            {{ link }} {{ url }} {{ endlink }}
+            {%- endtrans %}
         </p>
     </div>
-
-    <p>
-        <div>
-            {%- trans %}You can view registration details on this page:{% endtrans -%}<br>
-            {link}
-            {{ registration.locator.registrant }}
-        </div>
-    </p>
 {%- endblock %}
