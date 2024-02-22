@@ -175,22 +175,10 @@ class RHEximbayNotify(RH):
         if 'rescode' in assert_data and  'rescode' in res and \
             assert_data['rescode'] == '0000' and res['rescode'] == '0000':
             
-            #if hasattr(self.registration.transaction, 'data'):
-            #    self.registration.transaction.data = {}
-            
             return res['status'] in ('SALE', 'AUTH')
         else:
             settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
             manager_email = settings.get('notification_mail')
-            
-            # store error code & message to notify
-            data = {}
-            for key in ['rescode','resmsg']:
-                if key in assert_data:
-                    data[key] = assert_data.get(key)
-            
-            #if hasattr(self.registration.transaction, 'data'):
-            #    self.registration.transaction.data = data
             
             notify_payment_error_manager(self.registration, assert_data, manager_email)
             notify_payment_error_register(self.registration, assert_data)
@@ -269,14 +257,7 @@ class RHEximbayReturn(RH):
                 transaction.status == TransactionStatus.successful:
                 flash(_('Your payment has been confirmed.'), 'success')
             else:
-                msg = 'Your payment has failed.'
-                if hasattr(transaction, 'data') and \
-                    'rescode' in transaction.data and \
-                    'resmsg' in transaction.data:
-                    msg = msg + ' [' + transaction.data['rescode'] + \
-                            '] ( ' + transaction.data['resmsg'] + ' )'
-                
-                flash(_(msg), 'info')
+                flash(_('Your payment has failed.'), 'info')
         except TransactionFailure:
             flash(_('Your payment has failed.'), 'error')
         
