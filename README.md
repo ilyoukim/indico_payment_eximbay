@@ -7,32 +7,37 @@ When used, the user will be sent to Eximbay to make the payment,
 
 
 ## Installation guide
-https://docs.getindico.io/en/stable/installation/upgrade/
+https://docs.getindico.io/en/stable/installation/plugins/
 
-```bash
-sudo systemctl stop indico-celery.service
-```
+- Logged in as the indico user
+    ```bash
+    su - indico
+    source ~/.venv/bin/activate
+    ```
 
-```bash
-pip install git+https://{git_server}/indico_payment_eximbay.git
-```
+- Install plugin
+    ```bash
+    pip install git+https://{git_server}/indico_payment_eximbay.git
+    ```
 
-```sh
-## /opt/indico/etc/indico.conf
+- Enable plugins : /opt/indico/etc/indico.conf
+    ```sh
+    # Add Eximbay Plugin
+    PLUGINS = {'payment_manual', 'payment_eximbay'}
+    ```
+- Database migration
+    ```bash
+    indico db --all-plugins upgrade
+    ```
+- Reload uWSGI
+    ```bash
+    touch ~/web/indico.wsgi
+    ```
 
-# Add Eximbay Plugin
-PLUGINS = {'payment_manual', 'payment_eximbay'}
-```
-
-```bash
-indico db --all-plugins upgrade
-
-touch ~/web/indico.wsgi
-```
-
-```bash
-sudo systemctl start indico-celery.service
-```
+- Restart Celery worker (as root)
+    ```bash
+    systemctl restart indico-celery.service
+    ```
 
 
 ## Development test information
