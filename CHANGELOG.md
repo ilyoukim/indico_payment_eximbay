@@ -1,6 +1,10 @@
 # Changelog
 
 
+## [3.1.1] 2024-02-26
+
+- Update notification feature
+
 ## [3.1.0] 2024-02-21
 
 - Error message notification feature for users in case of payment failure
