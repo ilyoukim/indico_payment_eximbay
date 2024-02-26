@@ -13,18 +13,17 @@ from indico_payment_eximbay.util import get_paymethod
 @email_sender
 def notify_account_error(registration, data, to_address):
     event = registration.registration_form.event
-    # to_list = event.creator.email
+    # to_address = event.creator.email
     
     with event.creator.force_user_locale():
-        tpl = get_template_module('payment_eximbay:emails/payment_account_error_notify.html',
+        tpl = get_template_module('payment_eximbay:emails/account_error_notify.html',
                                   event=event, registration=registration, data=data)
         return make_email(to_address, template=tpl, html=True)
 
 @email_sender
-def notify_payment_error_manager(registration, data, to_address):
+def notify_payment_error(registration, data, to_address=None):
     ## minimum params
     keys = ['ref','amt','cur','accesscountry','paymethod','email','resdt','transid','rescode','resmsg']
-    
     newdata = {}
     for key in data:
         if key in keys:
@@ -33,22 +32,15 @@ def notify_payment_error_manager(registration, data, to_address):
     event = registration.registration_form.event
     paymethod = get_paymethod(data['paymethod'])
 
+    if to_address:
+        template_file = 'payment_error_notify_manager.html'
+    else:
+        template_file = 'payment_error_notify_register.html'
+        to_address = (registration.email, data.get('email'))
+        to_address = list(set(to_address))
+    
     with event.creator.force_user_locale():
-        tpl = get_template_module('payment_eximbay:emails/payment_error_notify_manager.html',
+        tpl = get_template_module('payment_eximbay:emails/' + template_file,
                                   event=event, registration=registration, data=newdata,
                                   paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
         return make_email(to_address, template=tpl, html=True)
-
-@email_sender
-def notify_payment_error_register(registration, data):
-    event = registration.registration_form.event
-    to_list = (registration.email, data.get('email'))
-    to_list = list(set(to_list))
-    
-    paymethod = get_paymethod(data['paymethod'])
-    
-    with event.creator.force_user_locale():
-        tpl = get_template_module('payment_eximbay:emails/payment_error_notify_register.html',
-                                  event=event, registration=registration, data=data,
-                                  paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
-        return make_email(to_list, template=tpl, html=True)

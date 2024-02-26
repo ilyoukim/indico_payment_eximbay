@@ -3,7 +3,7 @@
 {% block footer %}{% endblock %}
 
 {% block subject -%}
-    {% trans %}Eximbay Payment error{% endtrans %}
+    {% trans %}Eximbay Payment has failed{% endtrans %}
 {%- endblock %}
 
 {% block body -%}
@@ -25,7 +25,7 @@
                 <li>Message: {{ errMsg }}</li>
             </ul>
             {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
-            <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Docs</a>
+            <a href="https://developer.eximbay.com/eng/api_sdk/code-error-en.html" target="_blank">Eximbay Error Code</a>
         </p>
         
         <p>

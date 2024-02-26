@@ -36,8 +36,7 @@ from indico.web.rh import RH
 
 from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_PP_DIRECT_URL,
                                          get_fgkey, get_transdata)
-from indico_payment_eximbay.notifications import (notify_payment_error_manager,
-                                                  notify_payment_error_register,
+from indico_payment_eximbay.notifications import (notify_payment_error,
                                                   notify_account_error)
 from indico_payment_eximbay import _
 
@@ -116,7 +115,7 @@ class RHEximbayNotify(RH):
             return False
         
         if not fgkey == str(transaction_data['fgkey']):
-            notify_payment_error_manager(self.registration, transaction_data, manager_email)
+            notify_payment_error(self.registration, transaction_data, manager_email)
             return False
 
         return True
@@ -180,8 +179,8 @@ class RHEximbayNotify(RH):
             settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
             manager_email = settings.get('notification_mail')
             
-            notify_payment_error_manager(self.registration, assert_data, manager_email)
-            notify_payment_error_register(self.registration, assert_data)
+            notify_payment_error(self.registration, assert_data, manager_email)
+            notify_payment_error(self.registration, assert_data)
             return False
 
     def _register_payment(self, assert_data):
