@@ -45,17 +45,19 @@
             </td>
         </tr>
         <tr>
+            {% if eximbay_global %}
+                <td>
+                    <form action="{{ payment_url }}" method="POST">
+                        {% for key, value in eximbay_global.items() %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endfor %}
+                        <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
+                    </form>
+                </td>
+            {% endif %}
             <td>
                 <form action="{{ payment_url }}" method="POST">
                     {% for key, value in eximbay.items() %}
-                        <input type="hidden" name="{{ key }}" value="{{ value }}">
-                    {% endfor %}
-                    <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
-                </form>
-            </td>
-            <td>
-                <form action="{{ payment_url }}" method="POST">
-                    {% for key, value in eximbay_kor.items() %}
                         <input type="hidden" name="{{ key }}" value="{{ value }}">
                     {% endfor %}
                     <button type="submit" class="action-button">{% trans %}Pay Now: Korea{% endtrans %}</button>
