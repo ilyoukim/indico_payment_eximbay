@@ -46,12 +46,13 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Eximbay',
-        'url': 'https://secureapi.eximbay.com',
+        'method_name': 'Online payment with Eximbay',
+        'url': 'https://secureapi.test.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
-        'order_description': '{event_title}, {regform_title}, {user_name}',
-        'order_identifier': 'e{event_id}u{user_id}r{registration_id}',
+        'credit_global': None,
+        'order_description': '{event_title} {regform_title}',
+        'order_identifier': 'e{event_id}f{regform_id}u{user_id}r{registration_id}',
         'notification_mail': None
     }
     #: per event default settings - use the global settings
@@ -61,6 +62,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
+        'credit_global': False,
         'order_description': None,
         'order_identifier': None,
         'notification_mail': None
@@ -77,31 +79,34 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
 
     def _get_transaction_parameters(self, data, isKor=False):
         """Get parameters for creating a transaction request."""
-        event = data['event']
-        settings = data['event_settings']
+        # event = data['event']
         registration = data['registration']
+        # settings = data['settings']
+        event_settings = data['event_settings']
         
         # security Key is not accurate
-        if len(settings['account_securitykey']) < 32:
+        if len(event_settings['account_securitykey']) < 32:
             raise KeyError
         
         format_map = {
-            'user_id': registration.user_id,
+            'user_uid': registration.user_id,
+            'user_id': registration.friendly_id,        # user_id at this event
             'user_name': registration.full_name,
             'user_firstname': registration.first_name,
             'user_lastname': registration.last_name,
             'event_id': registration.event_id,
             'event_title': registration.event.title,
             'registration_id': registration.id,
-            'regform_title': registration.registration_form.title
+            'regform_id': registration.registration_form_id,
+            'regform_title': registration.registration_form.title,
         }
-        order_description = settings['order_description'].format(**format_map)
-        order_identifier = settings['order_identifier'].format(**format_map)
+        order_description = event_settings['order_description'].format(**format_map)
+        order_identifier = event_settings['order_identifier'].format(**format_map)
         
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'mid': settings.get('account_id'),
+            'mid': event_settings.get('account_id'),
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
@@ -114,7 +119,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(settings.get('account_securitykey'), transaction_data, isKor)
+        transaction_data = get_transdata(event_settings.get('account_securitykey'), transaction_data, isKor)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
@@ -122,12 +127,19 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         parameters check: template/event_payment_form.html
         
         base_url : eximbay payment service url
-        eximbay : traslation data set
+        eximbay : translation data set for Korean Credit Card
+        eximbay_global : translation data set for Global Credit Card
         payment_url : redirection url after click send
         """
         base_url = data['event_settings']['url']
+        credit_global = data['event_settings']['credit_global']
         
-        data['eximbay'] = self._get_transaction_parameters(data)
-        data['eximbay_kor'] = self._get_transaction_parameters(data, True)
+        data['eximbay'] = self._get_transaction_parameters(data, True)
+        
+        if credit_global:
+            data['eximbay_global'] = self._get_transaction_parameters(data)
+        else:
+            data['eximbay_global'] = None
+        
         data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
 

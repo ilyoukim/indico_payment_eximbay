@@ -7,12 +7,13 @@
 
 import re
 
-from wtforms.fields import StringField, URLField
+from wtforms.fields import BooleanField, StringField, URLField
 from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 
 from indico.modules.events.payment import PaymentEventSettingsFormBase, PaymentPluginSettingsFormBase
 from indico.web.forms.fields import IndicoPasswordField
 from indico.web.forms.validators import IndicoRegexp
+from indico.web.forms.widgets import SwitchWidget
 
 from indico_payment_eximbay import _
 
@@ -33,20 +34,22 @@ class FormatField:
 
     #: default placeholders to test length after formatting
     default_field_map = {
+        'event_id': 12345,
+        'event_title': 'Placeholder: The Event',
+        'regform_id': 12345,
+        'regform_title': 'EarlyBird Registration',
         'user_id': 12345,
         'user_name': 'Jane Whiteacre',
         'user_firstname': 'Jane',
         'user_lastname': 'Whiteacre',
-        'event_id': 12345,
-        'event_title': 'Placeholder: The Event',
         'registration_id': 12345,
-        'regform_title': 'EarlyBird Registration'
     }
 
     #: id-safe placeholders to test length after formatting
     id_safe_field_map = {
-        'user_id': 12345,
         'event_id': 12345,
+        'regform_id': 12345,
+        'user_id': 12345,
         'registration_id': 12345,
     }
 
@@ -92,9 +95,13 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
 
     url = URLField(
         label=_('API URL'),
-        validators=[DataRequired()],
-        description=_('URL to contact the Eximbay Payment Service.'
-                        'Test server is "https://secureapi.test.eximbay.com"'),
+        validators=[Optional()],
+        description=_(
+            'Default URL to connect the Eximbay Payment Service. '
+            'Test server is "https://secureapi.test.eximbay.com". '
+            'Service server is "https://secureapi.eximbay.com" '
+            'Event managers will be able to override this.'
+        ),
     )
     account_id = StringField(
         label=_('Account ID'),
@@ -117,6 +124,15 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
             'Event managers will be able to override this.'
         )
+    )
+    credit_global = BooleanField(
+        label=_('Global Credit'),
+        widget=SwitchWidget(),
+        validators=[Optional()],
+        description=_(
+            'Default status to use Global credit.'
+            'Event managers will be able to override this.'
+        ),
     )
     order_description = StringField(
         label=_('Order Description'),
@@ -154,8 +170,11 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
     url = URLField(
         label=_('API URL'),
         validators=[DataRequired()],
-        description=_('URL to contact the Eximbay Payment Service.'
-                        'Test server is "https://secureapi.test.eximbay.com"'),
+        description=_(
+            'URL to contact the Eximbay Payment Service. '
+            'Test server is "https://secureapi.test.eximbay.com". '
+            'Service server is "https://secureapi.eximbay.com"'
+        ),
     )
     account_id = StringField(
         label=_('Account ID'),
@@ -176,6 +195,15 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         description=_(
             'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
         )
+    )
+    credit_global = BooleanField(
+        label=_('Global Credit'),
+        widget=SwitchWidget(),
+        validators=[Optional()],
+        description=_(
+            'Do you have authorization to use Global credit cards?. '
+            'Please check the contract of your Eximbay account.'
+        ),
     )
     order_description = StringField(
         label=_('Order Description'),
