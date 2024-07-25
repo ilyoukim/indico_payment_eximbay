@@ -1,6 +1,4 @@
 graft indico_payment_eximbay/static
 graft indico_payment_eximbay/templates
-graft indico_payment_eximbay_kor/static
-graft indico_payment_eximbay_kor/templates
 
 global-exclude *.pyc __pycache__ .keep
