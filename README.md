@@ -54,6 +54,6 @@ https://docs.getindico.io/en/stable/installation/plugins/
 
 ## Reference
 
-- Eximbay API : https://developer.eximbay.com/api_list/reference.html
+- Eximbay API : https://developer.eximbay.com/eximbay/api_list/reference.html
 
-- Error Code : https://developer.eximbay.com/api_sdk/code-error.html
+- Error Code :  https://developer.eximbay.com/eximbay/api_sdk/code-error.html

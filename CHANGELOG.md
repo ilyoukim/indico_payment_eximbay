@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.0] 2024-07-22
+
+- Add option for Global or Korean only
+- improve order Identification code with event user ID
 
 ## [3.1.1] 2024-02-26
 
