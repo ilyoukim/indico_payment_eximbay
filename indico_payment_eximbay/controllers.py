@@ -185,8 +185,11 @@ class RHEximbayNotify(RH):
 
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
-        ## not nessary params
-        except_keys = ['cardholder','email','cardno1','cardno4','authcode']
+        ## not necessary params
+        except_keys = ['ver','txntype','mid','cardholder','cardno1','cardno4',
+                       'baseamt','basecur','baserate','foreignamt','foreigncur','foreignrate',
+                       'dccrate','dm_decision','dm_review','dm_reject',
+                       ]
         
         store_data = {}
         for key in assert_data:
