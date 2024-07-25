@@ -22,9 +22,11 @@
 <table class="i-table">
     <thead>
         <tr class="i-table">
-            <th>
-                Global Credit Cards
-            </th>
+            {% if eximbay_global %}
+                <th>
+                    Global Credit Cards
+                </th>
+            {% endif %}
             <th>
                 Korean Credit Cards
             </th>
@@ -32,15 +34,14 @@
     </thead>
     <tbody>
         <tr>
-            <td rowspan="2">
-                VISA, MASTER, AMEX, JCB, UnionPay
-            </td>
+            {% if eximbay_global %}
+                <td>
+                    VISA, MASTER, AMEX, JCB, UnionPay
+                </td>
+            {% endif %}
             <td>
                 Shinhan, Samsung, KB, BC, Hyundai, Lotte, Woori, Hana, etc
-            </td>
-        </tr>
-        <tr>
-            <td>
+                <br>
                 <i>For domestic payments in South Korea only</i>
             </td>
         </tr>
@@ -60,7 +61,7 @@
                     {% for key, value in eximbay.items() %}
                         <input type="hidden" name="{{ key }}" value="{{ value }}">
                     {% endfor %}
-                    <button type="submit" class="action-button">{% trans %}Pay Now: Korea{% endtrans %}</button>
+                    <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
                 </form>
             </td>
         </tr>
