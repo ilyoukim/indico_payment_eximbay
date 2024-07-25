@@ -52,7 +52,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey': None,
         'credit_global': None,
         'order_description': '{event_title} {regform_title}',
-        'order_identifier': 'e{event_id}f{regform_id}u{user_id}r{registration_id}',
+        'order_identifier': 'e{event_id}f{regform_id}u{user_id}',
         'notification_mail': None
     }
     #: per event default settings - use the global settings
