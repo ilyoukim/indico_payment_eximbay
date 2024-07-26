@@ -142,4 +142,3 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             data['eximbay_global'] = None
         
         data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
-
