@@ -18,7 +18,6 @@ from indico.web.forms.widgets import SwitchWidget
 from indico_payment_eximbay import _
 
 
-# XXX: Maybe this could be refactored to use the standard indico Placeholder system?
 class FormatField:
     """Validator for format fields, i.e. strings with ``{key}`` placeholders.
 
@@ -95,7 +94,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
 
     url = URLField(
         label=_('API URL'),
-        validators=[Optional()],
+        validators=[DataRequired()],
         description=_(
             'Default URL to connect the Eximbay Payment Service. '
             'Test server is "https://secureapi.test.eximbay.com". '
