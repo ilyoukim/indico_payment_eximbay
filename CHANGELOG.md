@@ -1,5 +1,10 @@
 # Changelog
 
+
+## [3.2.1] 2024-07-26
+
+- Fix display payment details
+
 ## [3.2.0] 2024-07-22
 
 - Add option for Global or Korean only
