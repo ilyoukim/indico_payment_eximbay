@@ -46,11 +46,11 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     
     #: global default settings - should be a reasonable default
     default_settings = {
-        'method_name': 'Online payment with Eximbay',
+        'method_name': 'Online Payment with Eximbay',
         'url': 'https://secureapi.test.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
-        'credit_global': None,
+        'credit_global': True,
         'order_description': '{event_title} {regform_title}',
         'order_identifier': 'e{event_id}f{regform_id}u{user_id}',
         'notification_mail': None
@@ -62,7 +62,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
-        'credit_global': False,
+        'credit_global': None,
         'order_description': None,
         'order_identifier': None,
         'notification_mail': None
