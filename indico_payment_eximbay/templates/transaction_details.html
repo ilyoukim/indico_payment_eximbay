@@ -1,12 +1,10 @@
 {% extends 'events/payment/transaction_details.html' %}
 {% block details %}
-    {% if transaction.data.ref %}
+    {% if transaction.data.Transaction %}
         <hr>
-        <dt>{% trans %}Payment Ref. ID{% endtrans %}</dt>
-        <dd>{{ transaction.data.ref }}</dd>
-        {% if transaction.data.authcode %}
-            <dt>{% trans %}Authorization Code{% endtrans %}</dt>
-            <dd>{{ transaction.data.authcode }}</dd>
-        {% endif %}
+        <dt>{% trans %}Payment Order ID{% endtrans %}</dt>
+        <dd>{{ transaction.data.Transaction.ref }}</dd>
+        <dt>{% trans %}Authorization Code{% endtrans %}</dt>
+        <dd>{{ transaction.data.Transaction.authcode }}</dd>
     {% endif %}
 {% endblock %}

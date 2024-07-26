@@ -186,8 +186,10 @@ class RHEximbayNotify(RH):
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
         ## not necessary params
-        except_keys = ['ver','txntype','mid','cardholder','cardno1','cardno4',
-                       'baseamt','basecur','baserate','foreignamt','foreigncur','foreignrate',
+        except_keys = ['ver','txntype','mid',
+                       'cardholder','cardno1','cardno4',
+                       'baseamt','basecur','baserate',
+                       'foreignamt','foreigncur','foreignrate',
                        'dccrate','dm_decision','dm_review','dm_reject',
                        ]
         
@@ -202,7 +204,7 @@ class RHEximbayNotify(RH):
             currency = assert_data.get('cur'),
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
-            data = store_data
+            data = {'Transaction': store_data}
         )
 
     def _perform_request(self, task, assert_data):
