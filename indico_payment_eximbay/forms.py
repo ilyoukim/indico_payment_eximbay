@@ -129,7 +129,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         widget=SwitchWidget(),
         validators=[Optional()],
         description=_(
-            'Default status to use Global credit.'
+            'Default status to use Global credit. '
             'Event managers will be able to override this.'
         ),
     )
