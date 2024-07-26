@@ -106,7 +106,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('Account ID'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alpabets.')
+            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=_(
             'Default Eximbay account ID, such as "1849705C64". '
@@ -117,7 +117,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('Account Secret Key'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,40}', message='Field must contain up to 40 digits and alpabets.')
+            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain with 32 digits and alphabets.')
         ],
         description=_(
             'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
@@ -179,7 +179,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('Account ID'),
         validators=[
             DataRequired(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alpabets.')
+            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=_(
             'Eximbay account ID, such as "1849705C64". '
@@ -189,7 +189,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('Account Secret Key'),
         validators=[
             DataRequired(),
-            IndicoRegexp(r'[A-Z0-9]{0,40}', message='Field must contain up to 40 digits and alpabets.')
+            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain up to 32 digits and alphabets.')
         ],
         description=_(
             'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
