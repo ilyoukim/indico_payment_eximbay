@@ -22,6 +22,8 @@
                 <li>{%- trans %}Name: {% endtrans -%} {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>{%- trans %}e-mail: {% endtrans -%} {{ registration.email }}</li>
 
+                <li>{%- trans %}Order ID: {% endtrans -%} {{ ref }}</li>
+                <li>{%- trans %}Payment method: {% endtrans -%} {{ paymethod }}</li>
                 <li>{%- trans %}Code: {% endtrans -%} {{ errCode }}</li>
                 <li>{%- trans %}Message: {% endtrans -%} {{ errMsg }}</li>
             </ul>
@@ -30,7 +32,7 @@
         </p>
         
         <p>
-            transfered data
+            transferred data
             <ul>
             {% for key, value in data.items() %}
                 <li>"{{ key }}": "{{ value }}"</li>
