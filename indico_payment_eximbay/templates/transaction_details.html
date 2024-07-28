@@ -6,5 +6,7 @@
         <dd>{{ transaction.data.Transaction.ref }}</dd>
         <dt>{% trans %}Authorization Code{% endtrans %}</dt>
         <dd>{{ transaction.data.Transaction.authcode }}</dd>
+        <dt>{% trans %}Timestamp{% endtrans %}</dt>
+        <dd>{{ transaction.data.Transaction.resdt }}</dd>
     {% endif %}
 {% endblock %}
