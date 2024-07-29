@@ -33,22 +33,22 @@ class FormatField:
 
     #: default placeholders to test length after formatting
     default_field_map = {
-        'event_id': 'The ID of the event (e.g. 12345)',
-        'event_title': 'The title of the event',
-        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
-        'registration_form_title': 'The title of the registration form',
-        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
-        'registration_id': 'The user ID of the registration (e.g. 12345)',
-        'user_firstname': 'First name of the registrant',
-        'user_lastname': 'Last name of the registrant',
+        'event_id': 12345,
+        'event_title': 'Placeholder: The Event',
+        'registration_form_id': 12345,
+        'registration_form_title': 'EarlyBird Registration',
+        'registration_db_id': 12345,
+        'registration_id': 12345,
+        'user_firstname': 'Jane',
+        'user_lastname': 'Whiteacre',
     }
 
     #: id-safe placeholders to test length after formatting
     id_safe_field_map = {
-        'event_id': 'The ID of the event (e.g. 12345)',
-        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
-        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
-        'registration_id': 'The user ID of the registration (e.g. 12345)',
+        'event_id': 12345,
+        'registration_form_id': 12345,
+        'registration_db_id': 12345,
+        'registration_id': 12345,
     }
 
     def __init__(self, max_length=float('inf'), id_safe=False):
