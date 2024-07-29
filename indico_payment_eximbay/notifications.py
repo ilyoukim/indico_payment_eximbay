@@ -42,5 +42,5 @@ def notify_payment_error(registration, data, to_address=None):
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/' + template_file,
                                   event=event, registration=registration, data=newdata,
-                                  paymethod=paymethod, errCode=data['rescode'], errMsg=data['resmsg'])
+                                  paymethod=paymethod, orderID=data['ref'], errCode=data['rescode'], errMsg=data['resmsg'])
         return make_email(to_address, template=tpl, html=True)

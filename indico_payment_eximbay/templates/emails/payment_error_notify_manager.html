@@ -18,14 +18,16 @@
         <p>
             <ul>
                 <li>Event: {{ event.title }}</li>
-                <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
+                <li>Name: {{ registration.full_name }}</li>
                 <li>e-mail: {{ registration.email }}</li>
-                <li>Order ID: {{ ref }}</li>
+                
+                <li>Order ID: {{ orderID }}</li>
                 <li>Payment method: {{ paymethod }}</li>
                 <li>Code: {{ errCode }}</li>
                 <li>Message: {{ errMsg }}</li>
             </ul>
-            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}
+            <br>
             <a href="https://developer.eximbay.com/eximbay/api_sdk/code-error.html" target="_blank">Eximbay Error Code</a>
         </p>
         
