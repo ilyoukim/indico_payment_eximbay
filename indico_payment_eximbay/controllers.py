@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2020 Gyujin Kim
+## Copyright (C) 2019 - 2024 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -87,7 +87,7 @@ class RHEximbayNotify(RH):
                 return
             
             if not self._confirm_transaction(assert_response):
-                # send error message to manager and registor
+                # send error message to manager and register
                 return
             
             # if this matches, the user completed the transaction as requested by Indico
@@ -134,7 +134,7 @@ class RHEximbayNotify(RH):
             return True
         else:
             current_plugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
-                                        amount, currency, expected_amount, expected_currency)
+                                            amount, currency, expected_amount, expected_currency)
             
             notify_amount_inconsistency(self.registration, amount, currency)
             
@@ -151,11 +151,11 @@ class RHEximbayNotify(RH):
         new = transaction_data
         
         return (
-            old['ref'] == new['ref'] and
-            old['cur'] == new['cur'] and
-            old['transid'] == new['transid'] and
-            float(old['amt']) == float(new['amt'])
-        )
+                old['ref'] == new['ref'] and
+                old['cur'] == new['cur'] and
+                old['transid'] == new['transid'] and
+                float(old['amt']) == float(new['amt'])
+            )
 
     def _confirm_transaction(self, assert_data):
         """Confirm to Eximbay server that the transaction is accepted
@@ -171,7 +171,7 @@ class RHEximbayNotify(RH):
         response = self._perform_request('confirm', completion_data)
         res = dict(parse_qsl(urlsplit(response.text).path))
         
-        if 'rescode' in assert_data and  'rescode' in res and \
+        if 'rescode' in assert_data and 'rescode' in res and \
             assert_data['rescode'] == '0000' and res['rescode'] == '0000':
             
             return res['status'] in ('SALE', 'AUTH')
@@ -181,6 +181,7 @@ class RHEximbayNotify(RH):
             
             notify_payment_error(self.registration, assert_data, manager_email)
             notify_payment_error(self.registration, assert_data)
+            
             return False
 
     def _register_payment(self, assert_data):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2023 Gyujin Kim
+## Copyright (C) 2019 - 2024 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -147,14 +147,14 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
     assert_data : dict
     
     transdata = {
-        'charset': 'UTF-8',                 ## default
-        'ver': '230',                       ## eximbay version
+        'charset': 'UTF-8',                 # default
+        'ver': '230',                       # eximbay version
         'txntype': 'PAYMENT',               # message type: PAYMENT, QUERY
         'ostype': 'P',                      # P:pc (default), M:mobile
         'displaytype': 'P',                 # P:popup, R:page redirect
         'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
         'lang': display_language,           # KR, EN, CN, JP
-        'issuercountry': country,           # Nessary for Korea domestic credit card
+        'issuercountry': country,           # Required for Korea domestic credit card payment
         'mid': exim_account_id,
         'ref': order_identifier,            # orderId : unique value
         'amt': registration_price,

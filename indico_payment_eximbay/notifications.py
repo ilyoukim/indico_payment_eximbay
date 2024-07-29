@@ -1,5 +1,5 @@
 # This file is part of Indico.
-# Copyright (C) 2002 - 2023 CERN
+# Copyright (C) 2002 - 2024 CERN
 #
 # Indico is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License; see the
@@ -23,13 +23,16 @@ def notify_account_error(registration, data, to_address):
 @email_sender
 def notify_payment_error(registration, data, to_address=None):
     ## minimum params
-    keys = ['ref','amt','cur','accesscountry','paymethod','email','resdt','transid','rescode','resmsg']
+    keys = ['ref','amt','cur','accesscountry','paymethod','email',
+            'resdt','transid','rescode','resmsg']
+    
     newdata = {}
     for key in data:
         if key in keys:
             newdata[key] = data.get(key)
     
     event = registration.registration_form.event
+    
     paymethod = get_paymethod(data['paymethod'])
 
     if to_address:
@@ -41,6 +44,7 @@ def notify_payment_error(registration, data, to_address=None):
     
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/' + template_file,
-                                  event=event, registration=registration, data=newdata,
-                                  paymethod=paymethod, orderID=data['ref'], errCode=data['rescode'], errMsg=data['resmsg'])
+                                    event=event, registration=registration, data=newdata,
+                                    paymethod=paymethod, orderID=data['ref'],
+                                    errCode=data['rescode'], errMsg=data['resmsg'])
         return make_email(to_address, template=tpl, html=True)

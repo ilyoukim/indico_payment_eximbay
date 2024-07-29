@@ -1,5 +1,5 @@
 # This file is part of the Indico plugins.
-# Copyright (C) 2017 - 2023 Max Fischer, Martin Claus, CERN
+# Copyright (C) 2017 - 2024 Max Fischer, Martin Claus, CERN
 #
 # The Indico plugins are free software; you can redistribute
 # them and/or modify them under the terms of the MIT License;
@@ -110,20 +110,24 @@ class FormatField:
         """
         if not field.data:
             return True
+        
         try:
             test_format = field.data.format(**self.field_map)
         except KeyError as exc:
             raise ValidationError(_('Invalid format string key: {}').format(exc))
         except ValueError as exc:
             raise ValidationError(_('Malformed format string: {}').format(exc))
+        
         if len(test_format) > self.max_length:
             raise ValidationError(
                 _('Format string too long: shortest replacement with {len}, expected {max}')
                 .format(len=len(test_format), max=self.max_length)
             )
+        
         if self.id_safe and not re.match(r'^[A-Za-z0-9.:_-]+$', test_format):
             raise ValidationError(_('This field may only contain alphanumeric chars, dots, colons, '
                                     'hyphens and underscores.'))
+        
         return True
 
 
