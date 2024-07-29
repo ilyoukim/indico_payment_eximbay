@@ -1,7 +1,11 @@
 # Changelog
 
+## [3.2.3] 2024-07-29
 
-## [3.2.1] 2024-07-26
+- improve plugin setting description
+- display order ID and timestamp
+
+## [3.2.2] 2024-07-26
 
 - Fix display payment details
 
