@@ -179,7 +179,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         validators=[DataRequired(), FormatField(max_length=100)],
         description=render_placeholders((
             'The default description of each order in a human readable way (max. 100 chars).<br>'
-            'It is presented to the registrant during the transaction with Eximbay. '
+            'It is presented to the registrant during the transaction with Eximbay.<br>'
             '*Event managers will be able to override this. '
         ), **FormatField.default_field_descriptions)
     )
@@ -188,7 +188,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         validators=[DataRequired(), FormatField(max_length=30, id_safe=True)],
         description=render_placeholders((
             'The default identifier of each order for further processing (max. 30 chars).<br>'
-            'Event managers will be able to override this. '
+            'Event managers will be able to override this.<br>'
         ), **FormatField.id_safe_field_descriptions)
     )
     notification_mail = StringField(
@@ -196,7 +196,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         validators=[Optional(), Email(), Length(0, 50)],
         description=render_placeholders((
             'Email address to receive notifications of failed transactions.<br>'
-            "This is independent of Indico's own payment notifications. "
+            "This is independent of Indico's own payment notifications.<br>"
             '*Event managers will be able to override this.'
         ))
     )
@@ -243,7 +243,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         widget=SwitchWidget(),
         validators=[Optional()],
         description=render_placeholders((
-            'Do you have authorization to use Global credit cards?. '
+            'Do you have authorization to use Global credit cards? '
             'Please check the contract of your Eximbay account.')
         ),
     )
