@@ -14,10 +14,13 @@
     <dd>{{ registration.first_name }}</dd>
     <dt>{% trans %}Last name{% endtrans %}</dt>
     <dd>{{ registration.last_name }}</dd>
-    <dt>{% trans %}Description{% endtrans %}</dt>
-    <dd>{{ eximbay.item_0_product }}</dd>
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
+    <hr>
+    <dt>{% trans %}Order ID{% endtrans %}</dt>
+    <dd>{{ eximbay.ref }}</dd>
+    <dt>{% trans %}Order Description{% endtrans %}</dt>
+    <dd>{{ eximbay.item_0_product }}</dd>
 </dl>
 
 <table class="i-table">
