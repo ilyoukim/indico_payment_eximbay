@@ -20,11 +20,13 @@
                 <li>Event: {{ event.title }}</li>
                 <li>Name: {{ registration.first_name }} {{ registration.last_name }}</li>
                 <li>e-mail: {{ registration.email }}</li>
+
                 <li>Payment method: {{ paymethod }}</li>
                 <li>Error code: {{ errCode }}</li>
                 <li>Error message: {{ errMsg }}</li>
             </ul>
-            {%- trans %}Detailed information about error code on this page:{% endtrans -%}<br>
+            {%- trans %}Detailed information about error code on this page:{% endtrans -%}
+            <br>
             <a href="https://developer.eximbay.com/eximbay/api_sdk/code-error.html" target="_blank">Eximbay Error Code</a>
         </p>
 
