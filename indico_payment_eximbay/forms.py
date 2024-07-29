@@ -33,23 +33,22 @@ class FormatField:
 
     #: default placeholders to test length after formatting
     default_field_map = {
-        'event_id': 12345,
-        'event_title': 'Placeholder: The Event',
-        'regform_id': 12345,
-        'regform_title': 'EarlyBird Registration',
-        'user_id': 12345,
-        'user_name': 'Jane Whiteacre',
-        'user_firstname': 'Jane',
-        'user_lastname': 'Whiteacre',
-        'registration_id': 12345,
+        'event_id': 'The ID of the event (e.g. 12345)',
+        'event_title': 'The title of the event',
+        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
+        'registration_form_title': 'The title of the registration form',
+        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
+        'registration_id': 'The user ID of the registration (e.g. 12345)',
+        'user_firstname': 'First name of the registrant',
+        'user_lastname': 'Last name of the registrant',
     }
 
     #: id-safe placeholders to test length after formatting
     id_safe_field_map = {
-        'event_id': 12345,
-        'regform_id': 12345,
-        'user_id': 12345,
-        'registration_id': 12345,
+        'event_id': 'The ID of the event (e.g. 12345)',
+        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
+        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
+        'registration_id': 'The user ID of the registration (e.g. 12345)',
     }
 
     def __init__(self, max_length=float('inf'), id_safe=False):
@@ -58,7 +57,7 @@ class FormatField:
         :param max_length: optional maximum length,
                            checked on a test formatting
         :param field_map: keyword arguments to use for test formatting
-        :param id_safe: only allow fields safe for a saferpay id argument
+        :param id_safe: only allow fields safe for a eximbay id argument
         """
         self.max_length = max_length
         self.id_safe = id_safe
@@ -209,7 +208,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         validators=[DataRequired(), FormatField(max_length=80)],
         description=_(
             'The description of each order in a human readable way. '
-            'It is presented to the registrant during the transaction with Saferpay. '
+            'It is presented to the registrant during the transaction with Eximbay. '
             'Supported placeholders: {}'
         ).format(', '.join(f'{{{p}}}' for p in FormatField.default_field_map))
     )

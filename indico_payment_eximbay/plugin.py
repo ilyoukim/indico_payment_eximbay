@@ -51,8 +51,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_id': None,
         'account_securitykey': None,
         'credit_global': True,
-        'order_description': '{event_title} {regform_title}',
-        'order_identifier': 'e{event_id}f{regform_id}u{user_id}',
+        'order_description': '{event_title} {registration_form_title}',
+        'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
         'notification_mail': None
     }
     #: per event default settings - use the global settings
@@ -89,16 +89,15 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             raise KeyError
         
         format_map = {
-            'user_uid': registration.user_id,
-            'user_id': registration.friendly_id,        # user_id at this event
-            'user_name': registration.full_name,
-            'user_firstname': registration.first_name,
-            'user_lastname': registration.last_name,
+            'user_id': registration.user_id,
             'event_id': registration.event_id,
             'event_title': registration.event.title,
-            'registration_id': registration.id,
-            'regform_id': registration.registration_form_id,
-            'regform_title': registration.registration_form.title,
+            'registration_form_id': registration.registration_form_id,
+            'registration_form_title': registration.registration_form.title,
+            'registration_db_id': registration.id,
+            'registration_id': registration.friendly_id,
+            'user_firstname': registration.first_name,
+            'user_lastname': registration.last_name,
         }
         order_description = event_settings['order_description'].format(**format_map)
         order_identifier = event_settings['order_identifier'].format(**format_map)
