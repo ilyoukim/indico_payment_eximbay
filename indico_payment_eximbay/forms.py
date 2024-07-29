@@ -7,6 +7,7 @@
 
 import re
 
+from markupsafe import Markup
 from wtforms.fields import BooleanField, StringField, URLField
 from wtforms.validators import DataRequired, Email, Length, Optional, ValidationError
 
@@ -16,6 +17,26 @@ from indico.web.forms.validators import IndicoRegexp
 from indico.web.forms.widgets import SwitchWidget
 
 from indico_payment_eximbay import _
+
+
+def render_placeholders(headers, **kwargs):
+    """Render the list of available placeholders.
+
+    :param headers: the list of header description
+    :param kwargs: placeholders
+    """
+    
+    html = _(headers)
+    
+    if kwargs:
+        html += '<div class="placeholders">'
+        html += '<strong>Available placeholders:</strong>'
+        html += '<ul style="margin:0;">'
+        html += ' '.join(f'<li>{{{key}}} - {value}</li>' for key, value in kwargs.items())
+        html += '</ul>'
+        html += '</div>'
+    
+    return _(Markup(html))
 
 
 class FormatField:
@@ -35,22 +56,40 @@ class FormatField:
     default_field_map = {
         'event_id': 12345,
         'event_title': 'Placeholder: The Event',
+        'registration_db_id': 12345,
         'registration_form_id': 12345,
         'registration_form_title': 'EarlyBird Registration',
-        'registration_db_id': 12345,
         'registration_id': 12345,
         'user_firstname': 'Jane',
         'user_lastname': 'Whiteacre',
     }
-
+    
     #: id-safe placeholders to test length after formatting
     id_safe_field_map = {
         'event_id': 12345,
-        'registration_form_id': 12345,
         'registration_db_id': 12345,
+        'registration_form_id': 12345,
         'registration_id': 12345,
     }
 
+    default_field_descriptions = {
+        'event_id': 'The ID of the event (e.g. 12345)',
+        'event_title': 'The title of the event',
+        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
+        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
+        'registration_form_title': 'The title of the registration form',
+        'registration_id': 'The ID of the registration (e.g. 12345)',
+        'user_firstname': 'First name of the registrant',
+        'user_lastname': 'Last name of the registrant',
+    }
+    
+    id_safe_field_descriptions = {
+        'event_id': 'The ID of the event (e.g. 12345)',
+        'registration_db_id': 'The database ID of the registration (e.g. 12345)',
+        'registration_form_id': 'The ID of the registration form (e.g. 12345)',
+        'registration_id': 'The ID of the registration (e.g. 12345)',
+    }
+    
     def __init__(self, max_length=float('inf'), id_safe=False):
         """Format field validator, i.e. strings with ``{key}`` placeholders.
 
@@ -95,10 +134,13 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('API URL'),
         validators=[DataRequired()],
         description=_(
-            'Default URL to connect the Eximbay Payment Service. '
-            'Test server is "https://secureapi.test.eximbay.com". '
-            'Service server is "https://secureapi.eximbay.com" '
-            'Event managers will be able to override this.'
+            'Default URL to connect the Eximbay Payment Service.'
+            '<div">'
+            '<ul style="margin:0;">'
+            '<li>Test server: "https://secureapi.test.eximbay.com"</li>'
+            '<li>Service server: "https://secureapi.eximbay.com"</li>'
+            '</ul>'
+            '*Event managers will be able to override this.'
         ),
     )
     account_id = StringField(
@@ -108,8 +150,8 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=_(
-            'Default Eximbay account ID, such as "1849705C64". '
-            'Event managers will be able to override this.'
+            'Default Eximbay account ID, such as "1849705C64".<br>'
+            '*Event managers will be able to override this.'
         )
     )
     account_securitykey = StringField(
@@ -119,8 +161,8 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain with 32 digits and alphabets.')
         ],
         description=_(
-            'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
-            'Event managers will be able to override this.'
+            'Default Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464".<br>'
+            '*Event managers will be able to override this.'
         )
     )
     credit_global = BooleanField(
@@ -128,37 +170,35 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         widget=SwitchWidget(),
         validators=[Optional()],
         description=_(
-            'Default status to use Global credit. '
-            'Event managers will be able to override this.'
+            'Default status to use Global credit.<br>'
+            '*Event managers will be able to override this.'
         ),
     )
     order_description = StringField(
         label=_('Order Description'),
-        validators=[DataRequired(), FormatField(max_length=80)],
-        description=_(
-            'The default description of each order in a human readable way. '
+        validators=[DataRequired(), FormatField(max_length=100)],
+        description=render_placeholders((
+            'The default description of each order in a human readable way (max. 100 chars).<br>'
             'It is presented to the registrant during the transaction with Eximbay. '
-            'Event managers will be able to override this. '
-            'Supported placeholders: {}'
-        ).format(', '.join(f'{{{p}}}' for p in FormatField.default_field_map))
+            '*Event managers will be able to override this. '
+        ), **FormatField.default_field_descriptions)
     )
     order_identifier = StringField(
         label=_('Order Identifier'),
-        validators=[DataRequired(), FormatField(max_length=80, id_safe=True)],
-        description=_(
-            'The default identifier of each order for further processing. '
+        validators=[DataRequired(), FormatField(max_length=30, id_safe=True)],
+        description=render_placeholders((
+            'The default identifier of each order for further processing (max. 30 chars).<br>'
             'Event managers will be able to override this. '
-            'Supported placeholders: {}'
-        ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
+        ), **FormatField.id_safe_field_descriptions)
     )
     notification_mail = StringField(
         label=_('Notification Email'),
         validators=[Optional(), Email(), Length(0, 50)],
-        description=_(
-            'Email address to receive notifications of failed transactions. '
+        description=render_placeholders((
+            'Email address to receive notifications of failed transactions.<br>'
             "This is independent of Indico's own payment notifications. "
-            'Event managers will be able to override this.'
-        )
+            '*Event managers will be able to override this.'
+        ))
     )
 
 
@@ -168,10 +208,14 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
     url = URLField(
         label=_('API URL'),
         validators=[DataRequired()],
-        description=_(
-            'URL to contact the Eximbay Payment Service. '
-            'Test server is "https://secureapi.test.eximbay.com". '
-            'Service server is "https://secureapi.eximbay.com"'
+        description=render_placeholders((
+            'URL to contact the Eximbay Payment Service.'
+            '<div>'
+            '<ul style="margin:0;">'
+            '<li>Test server: "https://secureapi.test.eximbay.com"</li>'
+            '<li>Service server: "https://secureapi.eximbay.com"</li>'
+            '</ul>'
+            )
         ),
     )
     account_id = StringField(
@@ -180,8 +224,8 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             DataRequired(),
             IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
         ],
-        description=_(
-            'Eximbay account ID, such as "1849705C64". '
+        description=render_placeholders(
+            'Eximbay account ID, such as "1849705C64".'
         )
     )
     account_securitykey = IndicoPasswordField(
@@ -190,41 +234,39 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             DataRequired(),
             IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain up to 32 digits and alphabets.')
         ],
-        description=_(
-            'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464". '
+        description=render_placeholders((
+            'Eximbay account Secret key, such as "289F40E6640124B2628640168C3C5464".')
         )
     )
     credit_global = BooleanField(
         label=_('Global Credit'),
         widget=SwitchWidget(),
         validators=[Optional()],
-        description=_(
+        description=render_placeholders((
             'Do you have authorization to use Global credit cards?. '
-            'Please check the contract of your Eximbay account.'
+            'Please check the contract of your Eximbay account.')
         ),
     )
     order_description = StringField(
         label=_('Order Description'),
-        validators=[DataRequired(), FormatField(max_length=80)],
-        description=_(
-            'The description of each order in a human readable way. '
-            'It is presented to the registrant during the transaction with Eximbay. '
-            'Supported placeholders: {}'
-        ).format(', '.join(f'{{{p}}}' for p in FormatField.default_field_map))
+        validators=[DataRequired(), FormatField(max_length=100)],
+        description=render_placeholders((
+            'The description of each order in a human readable way (max. 100 chars). '
+            'It is presented to the registrant during the transaction with Eximbay.'
+            ), **FormatField.default_field_descriptions)
     )
     order_identifier = StringField(
         label=_('Order Identifier'),
-        validators=[DataRequired(), FormatField(max_length=80, id_safe=True)],
-        description=_(
-            'The default identifier of each order for further processing. '
-            'Supported placeholders: {}'
-        ).format(', '.join(f'{{{p}}}' for p in FormatField.id_safe_field_map))
+        validators=[DataRequired(), FormatField(max_length=30, id_safe=True)],
+        description=render_placeholders((
+            'The default identifier of each order for further processing (max. 30 chars).'
+            ), **FormatField.id_safe_field_descriptions)
     )
     notification_mail = StringField(
         label=_('Notification Email'),
         validators=[DataRequired(), Email(), Length(0, 50)],
-        description=_(
+        description=render_placeholders((
             'Email address to receive notifications of failed transactions. '
-            "This is independent of Indico's own payment notifications."
+            "This is independent of Indico's own payment notifications.")
         )
     )
