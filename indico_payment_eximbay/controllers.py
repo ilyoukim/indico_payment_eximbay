@@ -186,6 +186,13 @@ class RHEximbayNotify(RH):
 
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
+        # check transaction with actual transaction with payment url
+        settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
+        
+        payment_url = settings.get('url')
+        
+        valid_trans = payment_url in ("https://secureapi.eximbay.com", "https://secureapi.eximbay.com/")
+        
         ## not necessary params
         except_keys = ['ver','txntype','mid',
                        'cardholder','cardno1','cardno4',
@@ -198,6 +205,11 @@ class RHEximbayNotify(RH):
         for key in assert_data:
             if key not in except_keys:
                 store_data[key] = assert_data.get(key)
+        
+        store_data['valid_trans'] = valid_trans
+        
+        if not valid_trans:
+            store_data['resmsg'] = "Transaction with the Test server."
         
         register_transaction(
             registration = self.registration,
