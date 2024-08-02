@@ -1,5 +1,9 @@
 # Changelog
 
+## [3.2.4] 2024-08-02
+
+- Add notification data of Invalid Server Transactions
+
 ## [3.2.3] 2024-07-29
 
 - improve plugin setting description
