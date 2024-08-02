@@ -125,13 +125,18 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         """Prepare the payment form shown to registrants
         parameters check: template/event_payment_form.html
         
-        base_url : eximbay payment service url
+        payment_url : eximbay payment service url
+        valid_trans : to announce for no actual transaction
+        
         eximbay : translation data set for Korean Credit Card
         eximbay_global : translation data set for Global Credit Card
         payment_url : redirection url after click send
         """
-        base_url = data['event_settings']['url']
+        payment_url = data['event_settings']['url']
+        
         credit_global = data['event_settings']['credit_global']
+        
+        data['valid_trans'] = payment_url in ("https://secureapi.eximbay.com", "https://secureapi.eximbay.com/")
         
         data['eximbay'] = self._get_transaction_parameters(data, True)
         
@@ -140,4 +145,4 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         else:
             data['eximbay_global'] = None
         
-        data['payment_url'] = urljoin(base_url, EXIMBAY_PP_BASIC_URL)
+        data['payment_url'] = urljoin(payment_url, EXIMBAY_PP_BASIC_URL)

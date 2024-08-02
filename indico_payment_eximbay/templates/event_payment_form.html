@@ -23,6 +23,13 @@
     <dd>{{ eximbay.item_0_product }}</dd>
 </dl>
 
+{% if not valid_trans %}
+    <hr>
+    <p style="font-size:1.2em; padding-left:.5em; color:red">
+        <em>Online payments are under agency review; therefore, actual transaction will not be processed.</em>
+    </p>
+{% endif %}
+
 <table class="i-table">
     <thead>
         <tr class="i-table">
