@@ -85,7 +85,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         event_settings = data['event_settings']
         
         # security Key is not accurate
-        if len(event_settings['account_securitykey']) != 20:
+        if len(event_settings['account_securitykey']) != 32:
             raise KeyError
         
         format_map = {
