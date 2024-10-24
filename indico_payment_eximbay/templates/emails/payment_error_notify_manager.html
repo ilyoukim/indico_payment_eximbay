@@ -13,7 +13,7 @@
 
     <div class="content">
         <p>
-        It appears that the payment of the registration with ID {{ registration.friendly_id }} has been failed.
+            It appears that the payment of the registration with ID {{ registration.friendly_id }} has been failed.
         </p>
         <p>
             <ul>
@@ -41,9 +41,9 @@
         <p>
             transferred data
             <ul>
-            {% for key, value in data.items() %}
-                <li>{{ key }}: {{ value }}</li>
-            {% endfor %}
+                {% for key, value in data.items() %}
+                    <li>{{ key }}: {{ value }}</li>
+                {% endfor %}
             </ul>
         </p>
     </div>
