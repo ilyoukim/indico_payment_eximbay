@@ -22,6 +22,7 @@ The entry point for indico is the :py:class:`~.EximbayPaymentPlugin`.
 It handles configuration via the settings forms, initiates payments
 and provides callbacks for finished payments via its blueprint.
 """
+from datetime import datetime
 from urllib.parse import urljoin
 
 from indico.core.plugins import IndicoPlugin, url_for_plugin
@@ -114,12 +115,15 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         }
         order_description = event_settings['order_description'].format(**format_map)
         order_identifier = event_settings['order_identifier'].format(**format_map)
+
+        # max 30 characters
+        order_id = "{0}_{1:%m%d%H%M%S}".format(order_identifier, datetime.now())[:30]
         
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
             'mid': mid,                         # merchant ID
-            'ref': order_identifier,            # orderId : unique value
+            'ref': order_id,                    # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
             'buyer': registration.full_name,
@@ -166,7 +170,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         data['announcement'] = event_settings.get('announcement')
         data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
 
-        data['order_id'] = event_settings['order_identifier'].format(**format_map)
         data['item_name'] = event_settings['order_description'].format(**format_map)
 
         data['eximbay_korean'] = None
