@@ -145,19 +145,36 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         eximbay_global : translation data set for Global Credit Card
         payment_url : redirection url after click send
         """
-        event_settings = data.get('event_settings')
+        event_settings = data['event_settings']
+        registration = data['registration']
+        
+        format_map = {
+            'user_id': registration.user_id,
+            'event_id': registration.event_id,
+            'event_title': registration.event.title,
+            'registration_form_id': registration.registration_form_id,
+            'registration_form_title': registration.registration_form.title,
+            'registration_db_id': registration.id,
+            'registration_id': registration.friendly_id,
+            'user_firstname': registration.first_name,
+            'user_lastname': registration.last_name,
+        }
+
         payment_url = event_settings.get('url')
         
         # Display message
         data['announcement'] = event_settings.get('announcement')
         data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
 
-        data['eximbay'] = None
+        data['order_id'] = event_settings['order_identifier'].format(**format_map)
+        data['item_name'] = event_settings['order_description'].format(**format_map)
+
+        data['eximbay_korean'] = None
         data['eximbay_global'] = None
 
         mid1 = event_settings.get('account_id', None)
         if mid1:
-            data['eximbay'] = self._get_transaction_parameters(data, mid1, True)
+            data['eximbay_korean'] = self._get_transaction_parameters(data, mid1, True)
         
         mid2 = event_settings.get('account_id2', None)
         if mid2:

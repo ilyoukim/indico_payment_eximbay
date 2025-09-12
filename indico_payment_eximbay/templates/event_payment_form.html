@@ -17,20 +17,10 @@
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <hr>
-    {% if eximbay %}
-        <dt>{% trans %}Order ID{% endtrans %}</dt>
-        <dd>{{ eximbay.ref }}</dd>
-        <dt>{% trans %}Order Description{% endtrans %}</dt>
-        <dd>{{ eximbay.item_0_product }}</dd>
-    {% elif eximbay_global %}
-        <dt>{% trans %}Order ID{% endtrans %}</dt>
-        <dd>{{ eximbay_global.ref }}</dd>
-        <dt>{% trans %}Order Description{% endtrans %}</dt>
-        <dd>{{ eximbay_global.item_0_product }}</dd>
-    {% else %}
-        <dt>{% trans %}Order ID{% endtrans %}</dt><dd></dd>
-        <dt>{% trans %}Order Description{% endtrans %}</dt><dd></dd>
-    {% endif %}
+    <dt>{% trans %}Order ID{% endtrans %}</dt>
+    <dd>{{ order_id }}</dd>
+    <dt>{% trans %}Item Name{% endtrans %}</dt>
+    <dd>{{ item_name }}</dd>
 </dl>
 
 {% if not valid_trans %}
@@ -71,9 +61,9 @@
         </tr>
         <tr>
             <td>
-                {% if eximbay %}
+                {% if eximbay_korean %}
                     <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay.items() %}
+                        {% for key, value in eximbay_korean.items() %}
                             <input type="hidden" name="{{ key }}" value="{{ value }}">
                         {% endfor %}
                         <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
