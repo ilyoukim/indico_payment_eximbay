@@ -1,6 +1,6 @@
 # Changelog
 
-## [3.3.0] 2025-09-11
+## [3.2.5] 2025-09-11
 
 - Added support for multiple MIDs: Using two Merchant IDs (MIDs), one for Domestic credit cards and another for Global credit cards.
 

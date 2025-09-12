@@ -1,5 +1,5 @@
 # This file is part of the Indico plugins.
-# Copyright (C) 2017 - 2024 PAL
+# Copyright (C) 2017 - 2025 PAL
 #
 # The Indico plugins are free software; you can redistribute
 # them and/or modify them under the terms of the MIT License;
