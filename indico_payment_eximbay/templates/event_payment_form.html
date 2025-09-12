@@ -17,16 +17,33 @@
     <dt>{% trans %}Total amount{% endtrans %}</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <hr>
-    <dt>{% trans %}Order ID{% endtrans %}</dt>
-    <dd>{{ eximbay.ref }}</dd>
-    <dt>{% trans %}Order Description{% endtrans %}</dt>
-    <dd>{{ eximbay.item_0_product }}</dd>
+    {% if eximbay %}
+        <dt>{% trans %}Order ID{% endtrans %}</dt>
+        <dd>{{ eximbay.ref }}</dd>
+        <dt>{% trans %}Order Description{% endtrans %}</dt>
+        <dd>{{ eximbay.item_0_product }}</dd>
+    {% elif eximbay_global %}
+        <dt>{% trans %}Order ID{% endtrans %}</dt>
+        <dd>{{ eximbay_global.ref }}</dd>
+        <dt>{% trans %}Order Description{% endtrans %}</dt>
+        <dd>{{ eximbay_global.item_0_product }}</dd>
+    {% else %}
+        <dt>{% trans %}Order ID{% endtrans %}</dt><dd></dd>
+        <dt>{% trans %}Order Description{% endtrans %}</dt><dd></dd>
+    {% endif %}
 </dl>
 
 {% if not valid_trans %}
     <hr>
     <p style="font-size:1.2em; padding-left:.5em; color:red">
         <em>Online payments are pending agency review; transactions will not be processed.</em>
+    </p>
+{% endif %}
+
+{% if not announcement %}
+    <hr>
+    <p style="font-size:1.2em; padding-left:.5em; color:#B0C4DE">
+        <em>{{ announcement }}</em>
     </p>
 {% endif %}
 

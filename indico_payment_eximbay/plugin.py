@@ -144,8 +144,9 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         payment_url : redirection url after click send
         """
         event_settings = data.get('event_settings')
-        payment_url = event_settings.get('url', '')
-
+        payment_url = event_settings.get('url')
+        
+        data['announcement'] = event_settings.get('announcement')
         data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
         data['eximbay'] = None
         data['eximbay_global'] = None

@@ -211,6 +211,13 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Event managers will be able to override this.<br>'
         ), **FormatField.id_safe_field_descriptions)
     )
+    announcement = StringField(
+        label=_('Announcement'),
+        description=_(
+            'Default notification message on the Payment Page'
+            '*Event managers will be able to override this.'
+        )
+    )
     notification_mail = StringField(
         label=_('Notification Email'),
         validators=[Optional(), Email(), Length(0, 50)],
@@ -299,6 +306,12 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         description=render_placeholders((
             'The default identifier of each order for further processing (max. 30 chars).'
             ), **FormatField.id_safe_field_descriptions)
+    )
+    announcement = StringField(
+        label=_('Announcement'),
+        description=_(
+            'Notification Message on the Payment Page'
+        )
     )
     notification_mail = StringField(
         label=_('Notification Email'),
