@@ -38,7 +38,9 @@ https://docs.getindico.io/en/stable/installation/plugins/
     indico db --all-plugins upgrade
     ```
 
-- Restart uWSGI service (as root, optional): sometimes takes more than a few seconds, don't abort
+- Restart uWSGI service (as root, optional)
+
+  Don't abort, sometimes takes more than a few seconds
     ```bash
     systemctl restart indico-uwsgi.service
     ```
