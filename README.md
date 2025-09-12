@@ -1,9 +1,11 @@
 # Eximbay Payment Plugin
 
-This plugin provides a payment option for Indico's payment module using the Eximbay API.
+This plugin provides a payment option for Indico's payment module using the Eximbay API v2.3.
 
 When used, the user will be sent to Eximbay to make the payment,
  and afterwards they are automatically sent back to Indico.
+
+**Note: The payment system (v2.3) supports only Security Key authentication; API Key is not available.**
 
 
 ## Installation guide
@@ -18,12 +20,16 @@ https://docs.getindico.io/en/stable/installation/plugins/
 - Stop Indico service (as root)
     ```bash
     systemctl stop indico-celery.service
+
     systemctl stop indico-uwsgi.service (optional)
     ```
 
 - Install plugin
     ```bash
     pip install git+https://{git_server}/indico_payment_eximbay.git
+    
+    # Installation branch for development
+    pip install git+https://<git repository url>.git@<branch>
     ```
 
 - Enable plugins : /opt/indico/etc/indico.conf
@@ -35,12 +41,13 @@ https://docs.getindico.io/en/stable/installation/plugins/
 - Database migration
     ```bash
     indico db upgrade
+
     indico db --all-plugins upgrade
     ```
 
-- Restart uWSGI service (as root, optional)
+- Restart uWSGI service (as root) : optional
 
-  Don't abort, sometimes takes more than a few seconds
+  > Don't abort, sometimes takes more than a few seconds
     ```bash
     systemctl restart indico-uwsgi.service
     ```
@@ -70,6 +77,12 @@ https://docs.getindico.io/en/stable/installation/plugins/
 
 ## Reference
 
-- Eximbay API : https://developer.eximbay.com/eximbay/api_list/reference.html
+
+- Technical 
+Integration Guide v2.3
+
+    https://developer.eximbay.com/eximbay/payment_linkage/legacy.html
+
+
 
 - Error Code :  https://developer.eximbay.com/eximbay/api_sdk/code-error.html
