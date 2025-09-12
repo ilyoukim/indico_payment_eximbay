@@ -54,6 +54,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey2': None,
         'order_description': '{event_title} {registration_form_title}',
         'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
+        'announcement': None,
         'notification_mail': None
     }
     #: per event default settings - use the global settings
@@ -67,6 +68,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey2': None,
         'order_description': None,
         'order_identifier': None,
+        'announcement': None,
         'notification_mail': None
     }
     
