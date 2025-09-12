@@ -34,37 +34,25 @@
     <thead>
         <tr class="i-table">
             <th>
-                Global Credit Cards
+                Korean Credit Cards
             </th>
             <th>
-                Korean Credit Cards
+                Global Credit Cards
             </th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td>
-                VISA, MASTER, AMEX, JCB, UnionPay
-            </td>
-            <td>
                 Shinhan, Samsung, KB, BC, Hyundai, Lotte, Woori, Hana, etc
                 <br>
                 <i>For domestic payments in South Korea only</i>
             </td>
+            <td>
+                VISA, MASTER, AMEX, JCB, UnionPay
+            </td>
         </tr>
         <tr>
-            <td>
-                {% if eximbay_global %}
-                    <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay_global.items() %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% endfor %}
-                        <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
-                    </form>
-                {% else %}
-                    <i>Not Available</i>
-                {% endif %}
-            </td>
             <td>
                 {% if eximbay %}
                     <form action="{{ payment_url }}" method="POST">
@@ -72,6 +60,18 @@
                             <input type="hidden" name="{{ key }}" value="{{ value }}">
                         {% endfor %}
                         <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
+                    </form>
+                {% else %}
+                    <i>Not Available</i>
+                {% endif %}
+            </td>
+            <td>
+                {% if eximbay_global %}
+                    <form action="{{ payment_url }}" method="POST">
+                        {% for key, value in eximbay_global.items() %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endfor %}
+                        <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
                     </form>
                 {% else %}
                     <i>Not Available</i>
