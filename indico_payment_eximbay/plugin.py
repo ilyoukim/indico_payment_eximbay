@@ -47,10 +47,11 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     #: global default settings - should be a reasonable default
     default_settings = {
         'method_name': 'Online Payment with Eximbay',
-        'url': 'https://secureapi.test.eximbay.com',
+        'url': 'https://secureapi.eximbay.com',
         'account_id': None,
         'account_securitykey': None,
-        'credit_global': True,
+        'account_id2': None,
+        'account_securitykey2': None,
         'order_description': '{event_title} {registration_form_title}',
         'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
         'notification_mail': None
@@ -62,7 +63,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'url': None,
         'account_id': None,
         'account_securitykey': None,
-        'credit_global': None,
+        'account_id2': None,
+        'account_securitykey2': None,
         'order_description': None,
         'order_identifier': None,
         'notification_mail': None
@@ -77,16 +79,27 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
-    def _get_transaction_parameters(self, data, isKor=False):
+    def _get_transaction_parameters(self, data, mid, isKor=False):
         """Get parameters for creating a transaction request."""
         # event = data['event']
         registration = data['registration']
         # settings = data['settings']
         event_settings = data['event_settings']
         
-        # security Key is not accurate
-        if len(event_settings['account_securitykey']) != 32:
-            raise KeyError
+        security_key = event_settings.get('account_securitykey')
+        
+        if mid == event_settings.get('account_id'):
+            security_key = event_settings.get('account_securitykey')
+        elif mid == event_settings.get('account_id2'):
+            security_key = event_settings.get('account_securitykey2')
+        else:
+            return None
+        
+        # check validation for security Key
+        if isinstance(security_key, str) and len(security_key) == 32:
+            pass
+        else:
+            None
         
         format_map = {
             'user_id': registration.user_id,
@@ -105,7 +118,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'mid': event_settings.get('account_id'),
+            'mid': mid,                         # merchant ID
             'ref': order_identifier,            # orderId : unique value
             'amt': str(registration.price),
             'cur': registration.currency,
@@ -118,7 +131,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
             }
         
-        transaction_data = get_transdata(event_settings.get('account_securitykey'), transaction_data, isKor)
+        transaction_data = get_transdata(security_key, transaction_data, isKor)
         return transaction_data
     
     def adjust_payment_form_data(self, data):
@@ -132,17 +145,19 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         eximbay_global : translation data set for Global Credit Card
         payment_url : redirection url after click send
         """
-        payment_url = data['event_settings']['url']
-        
-        credit_global = data['event_settings']['credit_global']
-        
+        event_settings = data.get('event_settings')
+        payment_url = event_settings.get('url')
+
         data['valid_trans'] = payment_url in ("https://secureapi.eximbay.com", "https://secureapi.eximbay.com/")
+        data['eximbay'] = None
+        data['eximbay_global'] = None
+
+        mid1 = event_settings.get('account_id')
+        if mid1:
+            data['eximbay'] = self._get_transaction_parameters(data, mid1, True)
         
-        data['eximbay'] = self._get_transaction_parameters(data, True)
-        
-        if credit_global:
-            data['eximbay_global'] = self._get_transaction_parameters(data)
-        else:
-            data['eximbay_global'] = None
+        mid2 = event_settings.get('account_id2')
+        if mid2:
+            data['eximbay_global'] = self._get_transaction_parameters(data, mid2, False)
         
         data['payment_url'] = urljoin(payment_url, EXIMBAY_PP_BASIC_URL)

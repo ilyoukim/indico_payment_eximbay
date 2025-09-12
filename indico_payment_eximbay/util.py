@@ -117,8 +117,10 @@ def get_fgkey(exb_secret, data):
     :param data: request or response params
     :return: fgkey
     """
-    if len(exb_secret) < 32:
-        raise KeyError
+    if isinstance(exb_secret, str) and len(exb_secret) == 32:
+        pass
+    else:
+        return None
     
     newData = {}
     newData.update(data)
@@ -155,7 +157,7 @@ def get_transdata(exb_secret, assert_data, isKOR=False):
         'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
         'lang': display_language,           # KR, EN, CN, JP
         'issuercountry': country,           # Required for Korea domestic credit card payment
-        'mid': exim_account_id,
+        'mid': exim_account_id,             # Merchant ID
         'ref': order_identifier,            # orderId : unique value
         'amt': registration_price,
         'cur': registration_currency,

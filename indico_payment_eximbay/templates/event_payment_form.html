@@ -26,18 +26,16 @@
 {% if not valid_trans %}
     <hr>
     <p style="font-size:1.2em; padding-left:.5em; color:red">
-        <em>Online payments are under agency review; therefore, actual transaction will not be processed.</em>
+        <em>Online payments are pending agency review; transactions will not be processed.</em>
     </p>
 {% endif %}
 
 <table class="i-table">
     <thead>
         <tr class="i-table">
-            {% if eximbay_global %}
-                <th>
-                    Global Credit Cards
-                </th>
-            {% endif %}
+            <th>
+                Global Credit Cards
+            </th>
             <th>
                 Korean Credit Cards
             </th>
@@ -45,11 +43,9 @@
     </thead>
     <tbody>
         <tr>
-            {% if eximbay_global %}
-                <td>
-                    VISA, MASTER, AMEX, JCB, UnionPay
-                </td>
-            {% endif %}
+            <td>
+                VISA, MASTER, AMEX, JCB, UnionPay
+            </td>
             <td>
                 Shinhan, Samsung, KB, BC, Hyundai, Lotte, Woori, Hana, etc
                 <br>
@@ -57,23 +53,29 @@
             </td>
         </tr>
         <tr>
-            {% if eximbay_global %}
-                <td>
+            <td>
+                {% if eximbay_global %}
                     <form action="{{ payment_url }}" method="POST">
                         {% for key, value in eximbay_global.items() %}
                             <input type="hidden" name="{{ key }}" value="{{ value }}">
                         {% endfor %}
                         <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
                     </form>
-                </td>
-            {% endif %}
+                {% else %}
+                    <i>Not Available</i>
+                {% endif %}
+            </td>
             <td>
-                <form action="{{ payment_url }}" method="POST">
-                    {% for key, value in eximbay.items() %}
-                        <input type="hidden" name="{{ key }}" value="{{ value }}">
-                    {% endfor %}
-                    <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
-                </form>
+                {% if eximbay %}
+                    <form action="{{ payment_url }}" method="POST">
+                        {% for key, value in eximbay.items() %}
+                            <input type="hidden" name="{{ key }}" value="{{ value }}">
+                        {% endfor %}
+                        <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
+                    </form>
+                {% else %}
+                    <i>Not Available</i>
+                {% endif %}
             </td>
         </tr>
     </tbody>

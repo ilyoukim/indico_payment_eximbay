@@ -108,16 +108,26 @@ class RHEximbayNotify(RH):
         settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
         
         manager_email = settings.get('notification_mail')
-        fgkey = get_fgkey(settings.get('account_securitykey'), transaction_data)
         
-        if not settings['account_id'] == transaction_data['mid']:
+        if transaction_data['mid'] == settings.get('account_id', None):
+            security_key = settings.get('account_securitykey', None)
+        elif transaction_data['mid'] == settings.get('account_id2', None):
+            security_key = settings.get('account_securitykey', None)
+        else:
             notify_account_error(self.registration, transaction_data, manager_email)
             return False
         
-        if not fgkey == str(transaction_data['fgkey']):
+        if security_key is None:
+            notify_account_error(self.registration, transaction_data, manager_email)
+            return False
+        
+        valid_fgkey = get_fgkey(security_key, transaction_data)
+        if valid_fgkey == str(transaction_data['fgkey']):
+            pass
+        else:
             notify_payment_error(self.registration, transaction_data, manager_email)
             return False
-
+        
         return True
     
     def _verify_amount(self, assert_data):
@@ -237,9 +247,15 @@ class RHEximbayNotify(RH):
         """
         settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
         
-        assert_data['mid'] = settings['account_id']
-        data = get_transdata(settings['account_securitykey'], assert_data)
+        if assert_data['mid'] == settings.get('account_id'):
+            security_key = settings.get('account_securitykey')
+        elif assert_data['mid'] == settings.get('account_id2'):
+            security_key = settings.get('account_securitykey2')
+        else:
+            raise TransactionFailure(step=task, details="Security Key error")
         
+        data = get_transdata(security_key, assert_data)
+
         request_url = urljoin(settings['url'], EXIMBAY_PP_DIRECT_URL)
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
