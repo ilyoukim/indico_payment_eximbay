@@ -137,8 +137,8 @@ class RHEximbayNotify(RH):
         """
         expected_amount = float(self.registration.price)
         expected_currency = self.registration.currency
-        amount = float(assert_data.get('amt'))
-        currency = assert_data.get('cur')
+        amount = float(assert_data.get('amt','0'))
+        currency = assert_data.get('cur','')
         
         if expected_amount == amount and expected_currency == currency:
             return True
@@ -175,8 +175,8 @@ class RHEximbayNotify(RH):
             'keyfield': 'TRANSID'
             }
         
-        for key in ('ref', 'cur', 'amt', 'transid'):
-            completion_data[key] = assert_data.get(key)
+        for key in ('mid', 'ref', 'cur', 'amt', 'transid'):
+            completion_data[key] = assert_data.get(key, '')
         
         response = self._perform_request('confirm', completion_data)
         res = dict(parse_qsl(urlsplit(response.text).path))
@@ -201,7 +201,7 @@ class RHEximbayNotify(RH):
         
         payment_url = settings.get('url')
         
-        valid_trans = payment_url in ("https://secureapi.eximbay.com", "https://secureapi.eximbay.com/")
+        valid_trans = (payment_url == "https://secureapi.eximbay.com")
         
         ## not necessary params
         except_keys = ['ver','txntype','mid',
@@ -223,8 +223,8 @@ class RHEximbayNotify(RH):
         
         register_transaction(
             registration = self.registration,
-            amount = float(assert_data.get('amt')),
-            currency = assert_data.get('cur'),
+            amount = float(assert_data.get('amt','0')),
+            currency = assert_data.get('cur',''),
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
             data = {'Transaction': store_data}
@@ -247,16 +247,23 @@ class RHEximbayNotify(RH):
         """
         settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
         
-        if assert_data['mid'] == settings.get('account_id'):
-            security_key = settings.get('account_securitykey')
-        elif assert_data['mid'] == settings.get('account_id2'):
-            security_key = settings.get('account_securitykey2')
+        res_mid = assert_data.get('mid', '')
+        mid1 = settings.get('account_id', None)
+        mid2 = settings.get('account_id2', None)
+
+        if res_mid == mid1:
+            security_key = settings.get('account_securitykey', None)
+        elif res_mid == mid2:
+            security_key = settings.get('account_securitykey2', None)
         else:
+            raise TransactionFailure(step=task, details="mid error")
+        
+        if security_key is None:
             raise TransactionFailure(step=task, details="Security Key error")
         
         data = get_transdata(security_key, assert_data)
 
-        request_url = urljoin(settings['url'], EXIMBAY_PP_DIRECT_URL)
+        request_url = urljoin(settings.get('url',''), EXIMBAY_PP_DIRECT_URL)
         try:
             response = requests.post(url=request_url, data=data, timeout=5)
             response.raise_for_status()

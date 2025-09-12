@@ -86,16 +86,14 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # settings = data['settings']
         event_settings = data['event_settings']
         
-        security_key = event_settings.get('account_securitykey')
-        
-        if mid == event_settings.get('account_id'):
-            security_key = event_settings.get('account_securitykey')
-        elif mid == event_settings.get('account_id2'):
-            security_key = event_settings.get('account_securitykey2')
+        if mid == event_settings.get('account_id', None):
+            security_key = event_settings.get('account_securitykey', None)
+        elif mid == event_settings.get('account_id2', None):
+            security_key = event_settings.get('account_securitykey2', None)
         else:
             return None
         
-        # check validation for security Key
+        # check security Key validation
         if isinstance(security_key, str) and len(security_key) == 32:
             pass
         else:
@@ -146,17 +144,17 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         payment_url : redirection url after click send
         """
         event_settings = data.get('event_settings')
-        payment_url = event_settings.get('url')
+        payment_url = event_settings.get('url', '')
 
-        data['valid_trans'] = payment_url in ("https://secureapi.eximbay.com", "https://secureapi.eximbay.com/")
+        data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
         data['eximbay'] = None
         data['eximbay_global'] = None
 
-        mid1 = event_settings.get('account_id')
+        mid1 = event_settings.get('account_id', None)
         if mid1:
             data['eximbay'] = self._get_transaction_parameters(data, mid1, True)
         
-        mid2 = event_settings.get('account_id2')
+        mid2 = event_settings.get('account_id2', None)
         if mid2:
             data['eximbay_global'] = self._get_transaction_parameters(data, mid2, False)
         
