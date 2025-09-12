@@ -15,6 +15,12 @@ https://docs.getindico.io/en/stable/installation/plugins/
     source ~/.venv/bin/activate
     ```
 
+- Stop Indico service (as root)
+    ```bash
+    systemctl stop indico-celery.service
+    systemctl stop indico-uwsgi.service (optional)
+    ```
+
 - Install plugin
     ```bash
     pip install git+https://{git_server}/indico_payment_eximbay.git
@@ -25,10 +31,18 @@ https://docs.getindico.io/en/stable/installation/plugins/
     # Add Eximbay Plugin
     PLUGINS = {'payment_manual', 'payment_eximbay'}
     ```
+
 - Database migration
     ```bash
+    indico db upgrade
     indico db --all-plugins upgrade
     ```
+
+- Restart uWSGI service (as root, optional): sometimes takes more than a few seconds, don't abort
+    ```bash
+    systemctl restart indico-uwsgi.service
+    ```
+
 - Reload uWSGI
     ```bash
     touch ~/web/indico.wsgi
