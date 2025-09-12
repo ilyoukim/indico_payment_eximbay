@@ -40,9 +40,9 @@
     </p>
 {% endif %}
 
-{% if not announcement %}
+{% if announcement %}
     <hr>
-    <p style="font-size:1.2em; padding-left:.5em; color:#B0C4DE">
+    <p style="text-align: center; font-size:1.2em; color:#3C3CFF">
         <em>{{ announcement }}</em>
     </p>
 {% endif %}
@@ -79,7 +79,7 @@
                         <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
                     </form>
                 {% else %}
-                    <i>Not Available</i>
+                    <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
             </td>
             <td>
@@ -91,7 +91,7 @@
                         <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
                     </form>
                 {% else %}
-                    <i>Not Available</i>
+                    <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
             </td>
         </tr>

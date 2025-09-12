@@ -54,7 +54,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey2': None,
         'order_description': '{event_title} {registration_form_title}',
         'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
-        'announcement': None,
+        'announcement': '',
         'notification_mail': None
     }
     #: per event default settings - use the global settings
@@ -68,7 +68,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'account_securitykey2': None,
         'order_description': None,
         'order_identifier': None,
-        'announcement': None,
+        'announcement': '',
         'notification_mail': None
     }
     
@@ -148,8 +148,10 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         event_settings = data.get('event_settings')
         payment_url = event_settings.get('url')
         
+        # Display message
         data['announcement'] = event_settings.get('announcement')
         data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
+
         data['eximbay'] = None
         data['eximbay_global'] = None
 
