@@ -141,10 +141,10 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
             'Default URL to connect the Eximbay Payment Service for v2.3</br>'
             '<i>* Note: API Key authentication is not supported.</i>'
             '<div><ul style="margin:0;">'
-            '<li>Service server: <u>https://secureapi.eximbay.com</u><br>'
+            '<li>Service server: <u>https://api.eximbay.com</u><br>'
             '<i>* Use the issued <b>MID</b> and <b>Secret Key</b> after contract.</i>'
             '</li>'
-            '<li>Test server: <u>https://secureapi.test.eximbay.com</u></li>'
+            '<li>Test server: <u>https://api-test.eximbay.com</u></li>'
             '</ul>'
             '</div>'
             '*Event managers will be able to override this.'
@@ -154,21 +154,21 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('MID #1'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9]{10}$', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=_(
             'Default Eximbay MID (Merchant ID) for Domestic Credit Cards: 10 characters.'
             '*Event managers will be able to override this.'
         )
     )
-    account_securitykey = StringField(
-        label=_('Secret Key #1'),
+    account_key = StringField(
+        label=_('API Key #1'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain with 32 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=_(
-            'Default Secret key for Eximbay Domestic Credit MID (32 characters).<br>'
+            'Default Secret key for Eximbay Domestic Credit MID (25 characters).<br>'
             '*Event managers will be able to override this.'
         )
     )
@@ -176,21 +176,21 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('MID #2'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9]{10}$', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=_(
             'Default Eximbay MID (Merchant ID) for Global Credit Cards (10 characters).<br>'
             '*Event managers will be able to override this.'
         )
     )
-    account_securitykey2 = StringField(
-        label=_('Secret Key #2'),
+    account_key2 = StringField(
+        label=_('API Key #2'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain with 32 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=_(
-            'Default Secret key for Eximbay Global Credit MID (32 characters).<br>'
+            'Default Secret key for Eximbay Global Credit MID (25 characters).<br>'
             '*Event managers will be able to override this.'
         )
     )
@@ -213,6 +213,7 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
     )
     announcement = StringField(
         label=_('Announcement'),
+        validators=[Optional(), FormatField(max_length=100)],
         description=_(
             'Default notification message on the Payment Page'
             '*Event managers will be able to override this.'
@@ -239,13 +240,13 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
             'URL to connect the Eximbay Payment Service for v2.3</br>'
             '<i>* Note: API Key authentication is not supported.</i>'
             '<div><ul style="margin:0;">'
-            '<li>Service server: <u>https://secureapi.eximbay.com</u><br>'
+            '<li>Service server: <u>https://api.eximbay.com</u><br>'
             '<i>* Use the issued <b>MID</b> and <b>Secret Key</b> after contract.</i>'
             '</li>'
-            '<li>Test server: <u>https://secureapi.test.eximbay.com</u></li>'
+            '<li>Test server: <u>https://api-test.eximbay.com</u></li>'
             '<ul>'
-            '<li>Test Account ID: <code>1849705C64</code></li>'
-            '<li>Test Secret Key: <code>289F40E6640124B2628640168C3C5464</code></li>'
+            '<li>Test MID: <code>1849705C64</code></li>'
+            '<li>Test API Key: <code>test_1849705C642C217E0B2D</code></li>'
             '</ul>'
             '</ul>'
             '</div>'
@@ -256,40 +257,40 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('MID #1'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9]{10}$', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=render_placeholders(
             'Eximbay MID (Merchant ID) for Domestic Credit Cards: 10 characters.'
         )
     )
-    account_securitykey = IndicoPasswordField(
-        label=_('Secret Key #1'),
+    account_key = IndicoPasswordField(
+        label=_('API Key #1'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain up to 32 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=render_placeholders(
-            'Secret key for Eximbay Domestic Credit MID (32 characters).'
+            'Secret key for Eximbay Domestic Credit MID (25 characters).'
         )
     )
     account_id2 = StringField(
         label=_('MID #2'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,10}', message='Field must contain up to 10 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9]{10}$', message='Field must contain up to 10 digits and alphabets.')
         ],
         description=render_placeholders(
             'Eximbay MID (Merchant ID) for Global Credit Cards (10 characters).'
         )
     )
-    account_securitykey2 = IndicoPasswordField(
-        label=_('Secret Key #2'),
+    account_key2 = IndicoPasswordField(
+        label=_('API Key #2'),
         validators=[
             Optional(),
-            IndicoRegexp(r'[A-Z0-9]{0,32}', message='Field must contain up to 32 digits and alphabets.')
+            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=render_placeholders(
-            'Secret key for Eximbay Global Credit MID (32 characters).'
+            'Secret key for Eximbay Global Credit MID (25 characters).'
         )
     )
     order_description = StringField(
@@ -309,6 +310,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
     )
     announcement = StringField(
         label=_('Announcement'),
+        validators=[Optional(), FormatField(max_length=100)],
         description=_(
             'Notification Message on the Payment Page'
         )

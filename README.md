@@ -1,11 +1,11 @@
 # Eximbay Payment Plugin
 
-This plugin provides a payment option for Indico's payment module using the Eximbay API v2.3.
+This plugin provides a payment option for Indico's payment module using the Eximbay Open API.
 
 When used, the user will be sent to Eximbay to make the payment,
  and afterwards they are automatically sent back to Indico.
 
-**Note: The payment system (v2.3) supports only Security Key authentication; API Key is not available.**
+**Note: The payment system supports API Key only authentication; Security Key (old version) is not available.**
 
 
 ## Installation guide
@@ -65,9 +65,10 @@ https://docs.getindico.io/en/stable/installation/plugins/
 
 ## Development test information
 
-- API URL : https://secureapi.test.eximbay.com
-- Account ID : 1849705C64
-- Secret Key : 289F40E6640124B2628640168C3C5464
+* https://developer.eximbay.com/eximbay/payment_linkage/preparing-payment.html
+- API URL : https://api-test.eximbay.com
+- Test MID : 1849705C64
+- Test API Key : test_1849705C642C217E0B2D
 - credit card
     - Card Type : VISA
     - Card No : 4111 1111 1111 1111

@@ -4,6 +4,7 @@
 # Indico is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License; see the
 # LICENSE file for more details.
+import copy
 
 from indico.core.notifications import email_sender, make_email
 from indico.web.flask.templating import get_template_module
@@ -23,17 +24,19 @@ def notify_account_error(registration, data, to_address):
 @email_sender
 def notify_payment_error(registration, data, to_address=None):
     ## minimum params
-    keys = ['ref','amt','cur','accesscountry','paymethod','email',
-            'resdt','transid','rescode','resmsg']
+    keys = ['order_id','amount','currency','access_country','email',
+            'payment_method','transaction_date','transaction_id',
+            'card_holder','card_number4','auth_code',
+            'rescode','resmsg']
     
     newdata = {}
     for key in data:
         if key in keys:
-            newdata[key] = data.get(key)
+            newdata[key] = copy.deepcopy(data[key])
     
     event = registration.registration_form.event
     
-    paymethod = get_paymethod(data['paymethod'])
+    paymethod = get_paymethod(data.get('payment_method',''))
 
     if to_address:
         template_file = 'payment_error_notify_manager.html'
@@ -45,6 +48,6 @@ def notify_payment_error(registration, data, to_address=None):
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/' + template_file,
                                     event=event, registration=registration, data=newdata,
-                                    paymethod=paymethod, orderID=data['ref'],
-                                    errCode=data['rescode'], errMsg=data['resmsg'])
+                                    paymethod=paymethod, orderID=data.get('order_id',''),
+                                    errCode=data.get('rescode',''), errMsg=data.get('resmsg',''))
         return make_email(to_address, template=tpl, html=True)

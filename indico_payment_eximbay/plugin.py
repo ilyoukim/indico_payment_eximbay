@@ -29,8 +29,8 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
-from indico_payment_eximbay.util import (EXIMBAY_PP_BASIC_URL, EXIMBAY_CURRENCY,
-                                         get_transdata)
+from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_SDK_URL,
+                                         EXIMBAY_CURRENCY, get_transdata)
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     """Eximbay
@@ -48,11 +48,11 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     #: global default settings - should be a reasonable default
     default_settings = {
         'method_name': 'Online Payment with Eximbay',
-        'url': 'https://secureapi.eximbay.com',
+        'url': EXIMBAY_SERVICE_DOMAIN,
         'account_id': None,
-        'account_securitykey': None,
+        'account_key': None,
         'account_id2': None,
-        'account_securitykey2': None,
+        'account_key2': None,
         'order_description': '{event_title} {registration_form_title}',
         'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
         'announcement': '',
@@ -64,9 +64,9 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         'method_name': None,
         'url': None,
         'account_id': None,
-        'account_securitykey': None,
+        'account_key': None,
         'account_id2': None,
-        'account_securitykey2': None,
+        'account_key2': None,
         'order_description': None,
         'order_identifier': None,
         'announcement': '',
@@ -88,16 +88,18 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         registration = data['registration']
         # settings = data['settings']
         event_settings = data['event_settings']
+
+        api_url = event_settings.get('url')
         
         if mid == event_settings.get('account_id', None):
-            security_key = event_settings.get('account_securitykey', None)
+            api_key = event_settings.get('account_key', None)
         elif mid == event_settings.get('account_id2', None):
-            security_key = event_settings.get('account_securitykey2', None)
+            api_key = event_settings.get('account_key2', None)
         else:
             return None
         
         # check security Key validation
-        if isinstance(security_key, str) and len(security_key) == 32:
+        if isinstance(api_key, str) and len(api_key) < 25:
             pass
         else:
             None
@@ -122,32 +124,44 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         transaction_data = {
-            'mid': mid,                         # merchant ID
-            'ref': order_id,                    # orderId : unique value
-            'amt': str(registration.price),
-            'cur': registration.currency,
-            'buyer': registration.full_name,
-            'email': registration.email,
-            'item_0_product': order_description,
-            'item_0_unitPrice': str(registration.price),
-            'item_0_quantity': '1',
-            'returnurl': url_for_plugin('payment_eximbay.return', registration.locator.uuid, _external=True),
-            'statusurl': url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
-            }
-        
-        transaction_data = get_transdata(security_key, transaction_data, isKor)
+            "merchant": {
+                "mid": mid,                             # merchant ID
+            },
+            "payment": {
+                "order_id": order_id,                   # orderId : unique value
+                "currency": registration.currency,
+                "amount": str(registration.price),      # total price
+            },
+            "buyer": {
+                "name": registration.full_name,
+                "email": registration.email,
+            },
+            "product": [{
+                "name": order_description,
+                "unit_price": str(registration.price),
+                "quantity": str(1),
+                "link":""                               # open marker일 경우 필수라고 하는데 확인이 필요함
+            }],
+            "url": {
+                "return_url": url_for_plugin('payment_eximbay.return', registration.locator.uuid, _external=True),
+                "status_url": url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
+            },
+        }
+
+        transaction_data = get_transdata(api_url, api_key, transaction_data, isKor)
+
         return transaction_data
     
     def adjust_payment_form_data(self, data):
         """Prepare the payment form shown to registrants
         parameters check: template/event_payment_form.html
         
-        payment_url : eximbay payment service url
+        api_url : eximbay payment service url
         valid_trans : to announce for no actual transaction
         
         eximbay : translation data set for Korean Credit Card
         eximbay_global : translation data set for Global Credit Card
-        payment_url : redirection url after click send
+        api_url : redirection url after click send
         """
         event_settings = data['event_settings']
         registration = data['registration']
@@ -164,23 +178,15 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
             'user_lastname': registration.last_name,
         }
 
-        payment_url = event_settings.get('url')
+        api_url = event_settings.get('url')
+        mid1 = event_settings.get('account_id', None)
+        mid2 = event_settings.get('account_id2', None)
         
         # Display message
         data['announcement'] = event_settings.get('announcement')
-        data['valid_trans'] = (payment_url == "https://secureapi.eximbay.com")
-
+        data['valid_trans'] = (api_url == EXIMBAY_SERVICE_DOMAIN)
+        
         data['item_name'] = event_settings['order_description'].format(**format_map)
 
-        data['eximbay_korean'] = None
-        data['eximbay_global'] = None
-
-        mid1 = event_settings.get('account_id', None)
-        if mid1:
-            data['eximbay_korean'] = self._get_transaction_parameters(data, mid1, True)
-        
-        mid2 = event_settings.get('account_id2', None)
-        if mid2:
-            data['eximbay_global'] = self._get_transaction_parameters(data, mid2, False)
-        
-        data['payment_url'] = urljoin(payment_url, EXIMBAY_PP_BASIC_URL)
+        data['data_korean'] = bool(mid1)
+        data['data_global'] = bool(mid2)

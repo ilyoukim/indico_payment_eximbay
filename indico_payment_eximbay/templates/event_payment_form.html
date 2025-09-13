@@ -1,3 +1,5 @@
+<script type="text/javascript" src="{{ eximbay_sdk_url }}"></script>
+
 {% trans %}
     <p>
         Clicking on the <strong>Pay Now</strong> button you will get redirected to the Eximbay site in order to complete your transaction.
@@ -59,11 +61,9 @@
         </tr>
         <tr>
             <td>
-                {% if eximbay_korean %}
-                    <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay_korean.items() %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% endfor %}
+                {% if data_korean %}
+                    <form action="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}" method="POST">
+                        <input type="hidden" name="country" value="KR">
                         <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
                     </form>
                 {% else %}
@@ -71,11 +71,9 @@
                 {% endif %}
             </td>
             <td>
-                {% if eximbay_global %}
-                    <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay_global.items() %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% endfor %}
+                {% if data_global %}
+                    <form action="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}" method="POST">
+                        <input type="hidden" name="country" value="None">
                         <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
                     </form>
                 {% else %}
@@ -85,3 +83,5 @@
         </tr>
     </tbody>
 </table>
+
+
