@@ -30,7 +30,7 @@ from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
 from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_SDK_URL,
-                                         EXIMBAY_CURRENCY, get_transdata)
+                                         EXIMBAY_CURRENCY)
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     """Eximbay
@@ -82,76 +82,6 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         from indico_payment_eximbay.blueprint import blueprint
         return blueprint
 
-    def _get_transaction_parameters(self, data, mid, isKor=False):
-        """Get parameters for creating a transaction request."""
-        # event = data['event']
-        registration = data['registration']
-        # settings = data['settings']
-        event_settings = data['event_settings']
-
-        api_url = event_settings.get('url')
-        
-        if mid == event_settings.get('account_id', None):
-            api_key = event_settings.get('account_key', None)
-        elif mid == event_settings.get('account_id2', None):
-            api_key = event_settings.get('account_key2', None)
-        else:
-            return None
-        
-        # check security Key validation
-        if isinstance(api_key, str) and len(api_key) < 25:
-            pass
-        else:
-            None
-        
-        format_map = {
-            'user_id': registration.user_id,
-            'event_id': registration.event_id,
-            'event_title': registration.event.title,
-            'registration_form_id': registration.registration_form_id,
-            'registration_form_title': registration.registration_form.title,
-            'registration_db_id': registration.id,
-            'registration_id': registration.friendly_id,
-            'user_firstname': registration.first_name,
-            'user_lastname': registration.last_name,
-        }
-        order_description = event_settings['order_description'].format(**format_map)
-        order_identifier = event_settings['order_identifier'].format(**format_map)
-
-        # max 30 characters
-        order_id = "{0}_{1:%m%d%H%M%S}".format(order_identifier, datetime.now())[:30]
-        
-        # see the Eximbay Manual on what these things mean
-        # where to asynchronously call back from Eximbay
-        transaction_data = {
-            "merchant": {
-                "mid": mid,                             # merchant ID
-            },
-            "payment": {
-                "order_id": order_id,                   # orderId : unique value
-                "currency": registration.currency,
-                "amount": str(registration.price),      # total price
-            },
-            "buyer": {
-                "name": registration.full_name,
-                "email": registration.email,
-            },
-            "product": [{
-                "name": order_description,
-                "unit_price": str(registration.price),
-                "quantity": str(1),
-                "link":""                               # open marker일 경우 필수라고 하는데 확인이 필요함
-            }],
-            "url": {
-                "return_url": url_for_plugin('payment_eximbay.return', registration.locator.uuid, _external=True),
-                "status_url": url_for_plugin('payment_eximbay.notify', registration.locator.uuid, _external=True),
-            },
-        }
-
-        transaction_data = get_transdata(api_url, api_key, transaction_data, isKor)
-
-        return transaction_data
-    
     def adjust_payment_form_data(self, data):
         """Prepare the payment form shown to registrants
         parameters check: template/event_payment_form.html
