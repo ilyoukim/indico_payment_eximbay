@@ -24,7 +24,7 @@ import json
 import requests
 from urllib.parse import urljoin
 
-from flask import flash, jsonify,redirect, request, render_template
+from flask import flash, redirect, request, render_template_string
 from flask_pluginengine import current_plugin
 
 from werkzeug.exceptions import BadRequest, NotFound
@@ -87,7 +87,7 @@ class RHInitEximbayPayment(RHPaymentBase):
        # event = data['event']
         # registration = data['registration']
         # settings = data['settings']
-        event_settings = EximbayPaymentPlugin.event_settings.get_all(self.event)
+        event_settings = current_plugin.event_settings.get_all(self.event)
 
         api_url = event_settings.get('url')
         
@@ -95,7 +95,7 @@ class RHInitEximbayPayment(RHPaymentBase):
             mid = event_settings.get('account_id', None)
             api_key = event_settings.get('account_key', None)
         else:
-            mid == event_settings.get('account_id2', None)
+            mid = event_settings.get('account_id2', None)
             api_key = event_settings.get('account_key2', None)
         
         # check security Key validation
@@ -169,26 +169,26 @@ class RHInitEximbayPayment(RHPaymentBase):
         htmlTemplate = """
             <!doctype html>
             <html>
-            <body>
-            <script type="text/javascript" src="{{ eximbay_sdk_url }}"></script>
+            <script type="text/javascript" src="{{ sdk_url }}"></script>
             <script type="text/javascript">
                 function payment() {
-                    EXIMBAY.request_pay("{{ trans_data | tojson }}");
+                    EXIMBAY.request_pay({{ data }});
                 }
             </script>
-            <p>TEST</p>
+            <body onload="payment()">
             </body>
             </html>
             """
     
-        # <script>
-        #     window.onload = payment;
-        # </script>
+        api_url = EximbayPaymentPlugin.settings.get('url')
         data = {
-            "sdk_url": EXIMBAY_SDK_URL,
+            "sdk_url": urljoin(api_url, EXIMBAY_SDK_URL),
             "data": transaction_data,
             }
-        html = render_template(htmlTemplate, **data)
+        
+        html = render_template_string(htmlTemplate, **data)
+        html = html.replace("&#39;",'"')
+
         return html
 
     def _init_payment_page(self, transaction_data):
@@ -215,10 +215,8 @@ class RHInitEximbayPayment(RHPaymentBase):
         transaction_params = self._get_transaction_parameters(isKor)
         
         html = self._generate_page(transaction_params)
-        # html_template = self._init_payment_page(transaction_params)
-
-        # return redirect(payment_url)
-        return jsonify(html=html)
+        
+        return html
 
 
 

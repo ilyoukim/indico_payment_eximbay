@@ -60,20 +60,18 @@
         <tr>
             <td>
                 {% if data_korean %}
-                    <form action="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}" method="POST">
-                        <input type="hidden" name="country" value="KR">
-                        <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
-                    </form>
+                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, country='KR') }}">
+                        {% trans %}Pay Now: Korean{% endtrans %}
+                    </a>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
             </td>
             <td>
                 {% if data_global %}
-                    <form action="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}" method="POST">
-                        <input type="hidden" name="country" value="None">
-                        <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
-                    </form>
+                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}">
+                        {% trans %}Pay Now: Global{% endtrans %}
+                    </a>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
