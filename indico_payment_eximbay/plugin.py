@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2024 Gyujin Kim
+## Copyright (C) 2019 - 2025 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -22,15 +22,13 @@ The entry point for indico is the :py:class:`~.EximbayPaymentPlugin`.
 It handles configuration via the settings forms, initiates payments
 and provides callbacks for finished payments via its blueprint.
 """
-from datetime import datetime
-from urllib.parse import urljoin
 
 from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
-from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_SDK_URL,
-                                         EXIMBAY_CURRENCY)
+from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_CURRENCY)
+
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     """Eximbay
@@ -89,8 +87,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         api_url : eximbay payment service url
         valid_trans : to announce for no actual transaction
         
-        eximbay : translation data set for Korean Credit Card
-        eximbay_global : translation data set for Global Credit Card
+        korean : translation data set for Korean Credit Card
+        global : translation data set for Global Credit Card
         api_url : redirection url after click send
         """
         event_settings = data['event_settings']
@@ -109,14 +107,12 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         }
 
         api_url = event_settings.get('url')
-        mid1 = event_settings.get('account_id', None)
-        mid2 = event_settings.get('account_id2', None)
-        
-        # Display message
-        data['announcement'] = event_settings.get('announcement')
-        data['valid_trans'] = (api_url == EXIMBAY_SERVICE_DOMAIN)
         
         data['item_name'] = event_settings['order_description'].format(**format_map)
+        
+        # Display message
+        data['test'] = (api_url != EXIMBAY_SERVICE_DOMAIN)
+        data['announcement'] = event_settings.get('announcement')
 
-        data['data_korean'] = bool(mid1)
-        data['data_global'] = bool(mid2)
+        data['korean'] = bool(event_settings.get('account_id', None))
+        data['global'] = bool(event_settings.get('account_id2', None))

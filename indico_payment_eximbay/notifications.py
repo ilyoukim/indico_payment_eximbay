@@ -4,7 +4,6 @@
 # Indico is free software; you can redistribute it and/or
 # modify it under the terms of the MIT License; see the
 # LICENSE file for more details.
-import copy
 
 from indico.core.notifications import email_sender, make_email
 from indico.web.flask.templating import get_template_module
@@ -32,7 +31,7 @@ def notify_payment_error(registration, data, to_address=None):
     newdata = {}
     for key in data:
         if key in keys:
-            newdata[key] = copy.deepcopy(data[key])
+            newdata[key] = data.get(key)
     
     event = registration.registration_form.event
     

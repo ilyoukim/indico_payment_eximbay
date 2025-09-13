@@ -21,7 +21,7 @@
     <dd>{{ item_name }}</dd>
 </dl>
 
-{% if not valid_trans %}
+{% if test %}
     <hr>
     <p style="font-size:1.2em; padding-left:.5em; color:red">
         <em>Online payments are pending agency review; transactions will not be processed.</em>
@@ -59,7 +59,7 @@
         </tr>
         <tr>
             <td>
-                {% if data_korean %}
+                {% if korean %}
                     <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, country='KR') }}">
                         {% trans %}Pay Now: Korean{% endtrans %}
                     </a>
@@ -68,7 +68,7 @@
                 {% endif %}
             </td>
             <td>
-                {% if data_global %}
+                {% if global %}
                     <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}">
                         {% trans %}Pay Now: Global{% endtrans %}
                     </a>

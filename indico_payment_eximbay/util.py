@@ -16,11 +16,7 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Eximbay Indico EPayment Plugin;if not, see <http://www.gnu.org/licenses/>.
 
-import copy
 import base64
-import requests
-import json
-from urllib.parse import urljoin
 
 from indico_payment_eximbay import _
 
