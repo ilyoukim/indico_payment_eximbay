@@ -24,8 +24,8 @@ import json
 import requests
 from urllib.parse import urljoin
 
-from flask import flash, jsonify,redirect, request
-from flask_pluginengine import current_plugin, render_template
+from flask import flash, jsonify,redirect, request, render_template
+from flask_pluginengine import current_plugin
 
 from werkzeug.exceptions import BadRequest, NotFound
 
