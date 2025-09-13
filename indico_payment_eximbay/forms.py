@@ -267,7 +267,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('API Key #1'),
         validators=[
             Optional(),
-            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
+            IndicoRegexp(r'^[a-zA-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=render_placeholders(
             'Secret key for Eximbay Domestic Credit MID (25 characters).'
@@ -287,7 +287,7 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('API Key #2'),
         validators=[
             Optional(),
-            IndicoRegexp(r'^[A-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
+            IndicoRegexp(r'^[a-zA-Z0-9_]{25}$', message='Field must contain with 25 digits and alphabets and underscore.')
         ],
         description=render_placeholders(
             'Secret key for Eximbay Global Credit MID (25 characters).'
