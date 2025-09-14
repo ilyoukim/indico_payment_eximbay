@@ -76,9 +76,12 @@ class RHEximbayBase(RH):
 
 
 class RHInitEximbayPayment(RHPaymentBase):
+    """Handler for initial to use Eximbay service"""
 
     def _get_fgkey(self, api_url, api_key, data):
-        # url = "https://api-test.eximbay.com/v1/payments/ready"
+        """
+        # https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html
+        """
         request_url = urljoin(api_url, EXIMBAY_READY_URL)
         
         headers = get_request_header(api_key)
@@ -98,12 +101,13 @@ class RHInitEximbayPayment(RHPaymentBase):
         else:
             raise TransactionFailure(step='ready', details=response.text)
 
-    def _get_transaction_parameters(self, issuer_country):
+    def _get_transaction_parameters(self, params):
+        """Get parameters for creating a transaction request."""
         event_settings = current_plugin.event_settings.get_all(self.event)
 
         api_url = event_settings.get('url')
 
-        is_korean = issuer_country == "KR"
+        is_korean = params.get('issuer_country') == "KR"
 
         if is_korean:
             mid = event_settings.get('account_id', None)
@@ -113,7 +117,7 @@ class RHInitEximbayPayment(RHPaymentBase):
             api_key = event_settings.get('account_key2', None)
         
         # check security Key validation
-        if isinstance(api_key, str) and len(api_key) < 25:
+        if isinstance(api_key, str) and len(api_key) < 30:
             pass
         else:
             None
@@ -137,6 +141,7 @@ class RHInitEximbayPayment(RHPaymentBase):
         
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
+        # https://developer.eximbay.com/eximbay/api_list/reference.html#create_FGkey
         transaction_parameters = {
             "merchant": {
                 "mid": mid,                                     # merchant ID
@@ -209,10 +214,7 @@ class RHInitEximbayPayment(RHPaymentBase):
             """
     
         request_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
-        data = {
-            "sdk_url": request_url,
-            "data": request_data,
-            }
+        data = { "sdk_url": request_url, "data": request_data }
         
         html = render_template_string(htmlTemplate, **data)
 
@@ -237,9 +239,9 @@ class RHInitEximbayPayment(RHPaymentBase):
             raise NotFound
 
     def _process(self):
-        issuer_country = request.args.get('issuer_country', None)
+        params = request.args
         
-        transaction_data = self._get_transaction_parameters(issuer_country)
+        transaction_data = self._get_transaction_parameters(params)
         
         html = self._generate_page(transaction_data)
         
@@ -304,9 +306,9 @@ class RHEximbayNotify(RHEximbayBase):
     def is_authorized_transaction(self, transaction_data):
         """Verify the transaction data
         
-        Check mid from data which is include settings
+        https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html#afterCalling
         """
-        settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
+        settings = current_plugin.event_settings.get_all(self.event)
         
         mids = [settings.get('account_id', None),
                 settings.get('account_id2', None)]
@@ -325,29 +327,32 @@ class RHEximbayNotify(RHEximbayBase):
     
     def _verify_transaction(self, assert_data):
         """Verify transaction with Eximbay verify api
+        
+        https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html#paymentVerify
         """
         response = self._perform_request('verify', EXIMBAY_VERIFY_URL, assert_data)
         res = json.load(response.text)
         
-        resCode0 = res.get('rescode','').strip()
-        resCode1 = assert_data.get('rescode','').strip()
+        resCode = res.get('rescode','').strip()
 
-        if resCode0 == resCode1 == '0000':
+        if resCode == '0000':
             return True
-        
-        settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
-        manager_email = settings.get('notification_mail')
-        
-        notify_payment_error(self.registration, assert_data, manager_email)
-        notify_payment_error(self.registration, assert_data)
-        
-        return False
+        else:
+            settings = current_plugin.event_settings.get_all(self.event)
+            manager_email = settings.get('notification_mail')
+            
+            notify_payment_error(self.registration, assert_data, manager_email)
+            notify_payment_error(self.registration, assert_data)
+            
+            return False
 
     def _verify_amount(self, assert_data):
         """Verify the amount and currency of the payment.
 
         Sends an email but still registers incorrect payments.
         """
+        settings = current_plugin.event_settings.get_all(self.event)
+        
         expected_amount = float(self.registration.price)
         expected_currency = self.registration.currency
         amount = float(assert_data['amount'])
@@ -356,17 +361,19 @@ class RHEximbayNotify(RHEximbayBase):
         if expected_amount == amount and expected_currency == currency:
             return True
         else:
-            current_plugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
-                                            amount, currency, expected_amount, expected_currency)
+            manager_email = settings.get('notification_mail')
+            # current_plugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
+            #                                 amount, currency, expected_amount, expected_currency)
             
             notify_amount_inconsistency(self.registration, amount, currency)
+            notify_payment_error(self.registration, assert_data, manager_email)
             
             return False
 
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
         # check transaction with actual transaction with payment url
-        settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
+        settings = current_plugin.event_settings.get_all(self.event)
         
         api_url = settings.get('url')
         
@@ -413,7 +420,7 @@ class RHEximbayNotify(RHEximbayBase):
         
         3.2	Querying a Single Transaction
         """
-        settings = current_plugin.event_settings.get_all(self.registration.registration_form.event)
+        settings = current_plugin.event_settings.get_all(self.event)
         
         api_url = settings.get('url')
 
@@ -426,7 +433,7 @@ class RHEximbayNotify(RHEximbayBase):
         elif res_mid == mid2:
             api_key = settings.get('account_key2', None)
         else:
-            raise TransactionFailure(step=task, details="mid error")
+            raise TransactionFailure(step=task, details="MID error")
         
         if api_key is None:
             raise TransactionFailure(step=task, details="Security Key error")

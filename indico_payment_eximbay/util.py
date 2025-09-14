@@ -113,6 +113,10 @@ def get_paymethod(code):
     EXIMBAY_PAYMETHOD.get(code, code)
 
 def get_request_header(api_key):
+    """Base64 encoding
+
+    - https://developer.eximbay.com/eximbay/payment_linkage/preparing-payment.html#apiAuthentication
+    """
     text = api_key + ":"
     encoded = base64.b64encode(text.encode("utf-8")).decode("utf-8")
     

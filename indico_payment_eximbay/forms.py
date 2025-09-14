@@ -138,11 +138,11 @@ class PluginSettingsForm(PaymentPluginSettingsFormBase):
         label=_('API URL'),
         validators=[DataRequired()],
         description=_(
-            'Default URL to connect the Eximbay Payment Service for v2.3</br>'
-            '<i>* Note: API Key authentication is not supported.</i>'
+            'Default URL to connect the Eximbay Payment Service for Open API</br>'
+            '<i>* Note: API Key authentication support only.</i>'
             '<div><ul style="margin:0;">'
             '<li>Service server: <u>https://api.eximbay.com</u><br>'
-            '<i>* Use the issued <b>MID</b> and <b>Secret Key</b> after contract.</i>'
+            '<i>* Use the issued <b>MID</b> and <b>API Key</b> after contract.</i>'
             '</li>'
             '<li>Test server: <u>https://api-test.eximbay.com</u></li>'
             '</ul>'
@@ -237,11 +237,11 @@ class EventSettingsForm(PaymentEventSettingsFormBase):
         label=_('API URL'),
         validators=[DataRequired()],
         description=render_placeholders((
-            'URL to connect the Eximbay Payment Service for v2.3</br>'
-            '<i>* Note: API Key authentication is not supported.</i>'
+            'Default URL to connect the Eximbay Payment Service for Open API</br>'
+            '<i>* Note: API Key authentication support only.</i>'
             '<div><ul style="margin:0;">'
             '<li>Service server: <u>https://api.eximbay.com</u><br>'
-            '<i>* Use the issued <b>MID</b> and <b>Secret Key</b> after contract.</i>'
+            '<i>* Use the issued <b>MID</b> and <b>API Key</b> after contract.</i>'
             '</li>'
             '<li>Test server: <u>https://api-test.eximbay.com</u></li>'
             '<ul>'
