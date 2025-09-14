@@ -58,6 +58,7 @@ class TransactionFailure(Exception):
         self.step = step
         self.details = details
 
+
 class RHEximbayBase(RH):
     """Request Handler for asynchronous callbacks from SIXPay.
 
@@ -117,10 +118,8 @@ class RHInitEximbayPayment(RHPaymentBase):
             api_key = event_settings.get('account_key2', None)
         
         # check security Key validation
-        if isinstance(api_key, str) and len(api_key) < 30:
-            pass
-        else:
-            None
+        if api_key is None or len(api_key) != 25:
+            return None
         
         format_map = {
             'user_id': self.registration.user_id,
@@ -142,7 +141,7 @@ class RHInitEximbayPayment(RHPaymentBase):
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         # https://developer.eximbay.com/eximbay/api_list/reference.html#create_FGkey
-        transaction_parameters = {
+        transaction_params = {
             "merchant": {
                 "mid": mid,                                     # merchant ID
             },
@@ -175,12 +174,12 @@ class RHInitEximbayPayment(RHPaymentBase):
 
         # Korea Domestic Card
         if is_korean:
-            transaction_parameters['payment']['lang'] = 'KR'
-            transaction_parameters['settings']['issuer_country'] = 'KR'
+            transaction_params['payment']['lang'] = 'KR'
+            transaction_params['settings']['issuer_country'] = 'KR'
         
-        transaction_parameters['fgkey'] = self._get_fgkey(api_url, api_key, transaction_parameters)
+        transaction_params['fgkey'] = self._get_fgkey(api_url, api_key, transaction_params)
 
-        return transaction_parameters
+        return transaction_params
     
     def _generate_page(self, request_data):
         """Initialize payment page to connect eximbay payment redirect
@@ -239,9 +238,7 @@ class RHInitEximbayPayment(RHPaymentBase):
             raise NotFound
 
     def _process(self):
-        params = request.args
-        
-        transaction_data = self._get_transaction_parameters(params)
+        transaction_data = self._get_transaction_parameters(request.args)
         
         html = self._generate_page(transaction_data)
         
