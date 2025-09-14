@@ -1,53 +1,17 @@
 {% extends 'events/payment/transaction_details.html' %}
 {% block details %}
-    {% if transaction.data.Transaction %}
-        <hr>
-        {% if transaction.data.Transaction.valid_trans %}
-            <dt>{% trans %}Payment Order ID{% endtrans %}</dt>
-            <dd>
-                {% if transaction.data.Transaction.order_id %}
-                    {{ transaction.data.Transaction.order_id }}
-                {% endif %}
-                {% elif transaction.data.Transaction.ref %}
-                    {{ transaction.data.Transaction.ref }}
-                {% endif %}
-            </dd>
-            <dt>{% trans %}Authorization Code{% endtrans %}</dt>
-            <dd>
-                {% if transaction.data.Transaction.auth_code %}
-                    {{ transaction.data.Transaction.auth_code }}
-                {% endif %}
-                {% elif transaction.data.Transaction.authcode %}
-                    {{ transaction.data.Transaction.authcode }}
-                {% endif %}
-            </dd>
-            <dt>{% trans %}Timestamp{% endtrans %}</dt>
-            <dd>{{ transaction.data.Transaction.resdt }}</dd>
-            <dt>{% trans %}Message{% endtrans %}</dt>
-            <dd>{{ transaction.data.Transaction.resmsg }}</dd>
-        {% else %}
-            <dt>{% trans %}Payment Order ID{% endtrans %}</dt>
-            <dd style="color:red;">
-                {% if transaction.data.Transaction.order_id %}
-                    {{ transaction.data.Transaction.order_id }}
-                {% endif %}
-                {% elif transaction.data.Transaction.ref %}
-                    {{ transaction.data.Transaction.ref }}
-                {% endif %}
-            </dd>
-            <dt>{% trans %}Authorization Code{% endtrans %}</dt>
-            <dd style="color:red;">
-                {% if transaction.data.Transaction.auth_code %}
-                    {{ transaction.data.Transaction.auth_code }}
-                {% endif %}
-                {% elif transaction.data.Transaction.authcode %}
-                    {{ transaction.data.Transaction.authcode }}
-                {% endif %}
-            </dd>
-            <dt>{% trans %}Timestamp{% endtrans %}</dt>
-            <dd style="color:red;">{{ transaction.data.Transaction.resdt }}</dd>
-            <dt>{% trans %}Message{% endtrans %}</dt>
-            <dd style="color:red;">{{ transaction.data.Transaction.resmsg }}</dd>
-        {% endif %}
-    {% endif %}
+    {% set txn = transaction.data.Transaction %}
+    {% set fontColor = "inherit" if txn.valid_trans else "red" %}
+
+    <hr>
+    
+    {% for label, value in {
+        'Payment Order ID': txn.order_id or txn.ref,
+        'Authorization Code': txn.auth_code or txn.authcode,
+        'Timestamp': txn.resdt,
+        'Message': txn.resmsg
+    }.items() %}
+        <dt>{% trans %}{{ label }}{% endtrans %}</dt>
+        <dd style="color: {{ fontColor }};">{{ value }}</dd>
+    {% endfor %}
 {% endblock %}

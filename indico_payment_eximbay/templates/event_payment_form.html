@@ -10,21 +10,21 @@
 {% endtrans %}
 
 <dl class="i-data-list">
-    <dt>{% trans %}First name{% endtrans %}</dt>
+    <dt>First name</dt>
     <dd>{{ registration.first_name }}</dd>
-    <dt>{% trans %}Last name{% endtrans %}</dt>
+    <dt>Last name</dt>
     <dd>{{ registration.last_name }}</dd>
-    <dt>{% trans %}Total amount{% endtrans %}</dt>
+    <dt>Total amount</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <hr>
-    <dt>{% trans %}Item Name{% endtrans %}</dt>
+    <dt>Item Name</dt>
     <dd>{{ item_name }}</dd>
 </dl>
 
 {% if test %}
     <hr>
     <p style="font-size:1.2em; padding-left:.5em; color:red">
-        <em>Online payments are pending agency review; transactions will not be processed.</em>
+        <em>{% trans %}Online payments are pending agency review; transactions will not be processed.{% endtrans %}</em>
     </p>
 {% endif %}
 
@@ -61,7 +61,7 @@
             <td>
                 {% if korean %}
                     <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, issuer_country='KR') }}">
-                        {% trans %}Pay Now: Korean{% endtrans %}
+                        Pay Now: Korean
                     </a>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
@@ -70,7 +70,7 @@
             <td>
                 {% if global %}
                     <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}">
-                        {% trans %}Pay Now: Global{% endtrans %}
+                        Pay Now: Global
                     </a>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
