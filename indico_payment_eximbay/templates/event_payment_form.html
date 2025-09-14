@@ -60,7 +60,7 @@
         <tr>
             <td>
                 {% if korean %}
-                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, country='KR') }}">
+                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, issuer_country='KR') }}">
                         {% trans %}Pay Now: Korean{% endtrans %}
                     </a>
                 {% else %}

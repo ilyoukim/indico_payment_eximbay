@@ -98,15 +98,14 @@ class RHInitEximbayPayment(RHPaymentBase):
         else:
             raise TransactionFailure(step='ready', details=response.text)
 
-    def _get_transaction_parameters(self, isKor):
-       # event = data['event']
-        # registration = data['registration']
-        # settings = data['settings']
+    def _get_transaction_parameters(self, issuer_country):
         event_settings = current_plugin.event_settings.get_all(self.event)
 
         api_url = event_settings.get('url')
-        
-        if isKor:
+
+        is_korean = issuer_country == "KR"
+
+        if is_korean:
             mid = event_settings.get('account_id', None)
             api_key = event_settings.get('account_key', None)
         else:
@@ -170,7 +169,7 @@ class RHInitEximbayPayment(RHPaymentBase):
         }
 
         # Korea Domestic Card
-        if isKor:
+        if is_korean:
             transaction_parameters['payment']['lang'] = 'KR'
             transaction_parameters['settings']['issuer_country'] = 'KR'
         
@@ -190,7 +189,7 @@ class RHInitEximbayPayment(RHPaymentBase):
                 <script type="text/javascript" src="{{ sdk_url }}"></script>
                 <script type="text/javascript">
                     const EXIMBAY_PAYLOAD = {{ data | tojson }};
-                    
+
                     function payment() {
                         EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
                     }
@@ -238,9 +237,9 @@ class RHInitEximbayPayment(RHPaymentBase):
             raise NotFound
 
     def _process(self):
-        isKor = request.args.get('country','') == "KR"
+        issuer_country = request.args.get('issuer_country', None)
         
-        transaction_data = self._get_transaction_parameters(isKor)
+        transaction_data = self._get_transaction_parameters(issuer_country)
         
         html = self._generate_page(transaction_data)
         
