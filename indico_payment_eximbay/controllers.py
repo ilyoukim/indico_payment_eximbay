@@ -19,9 +19,9 @@
 Callbacks for asynchronous replies by the Eximbay service and to redirect the user
 """
 
-from datetime import datetime
 import json
 import requests
+from datetime import datetime
 from urllib.parse import urljoin
 
 from flask import flash, redirect, request, render_template_string
@@ -58,6 +58,21 @@ class TransactionFailure(Exception):
         self.step = step
         self.details = details
 
+class RHEximbayBase(RH):
+    """Request Handler for asynchronous callbacks from SIXPay.
+
+    These handlers are used either by
+
+    - the user, when he is redirected from SIXPay back to Indico
+    - SIXPay, when it sends back the result of a transaction
+    """
+
+    CSRF_ENABLED = False
+
+    def _process_args(self):
+        self.registration = Registration.query.filter_by(uuid=request.args['token']).first()
+        if not self.registration:
+            raise BadRequest
 
 
 class RHInitEximbayPayment(RHPaymentBase):
@@ -163,73 +178,77 @@ class RHInitEximbayPayment(RHPaymentBase):
 
         return transaction_parameters
     
-    def _generate_page(self, transaction_data):
+    def _generate_page(self, request_data):
         """Initialize payment page to connect eximbay payment redirect
         """
         htmlTemplate = """
             <!doctype html>
-            <html>
-            <script type="text/javascript" src="{{ sdk_url }}"></script>
-            <script type="text/javascript">
-                function payment() {
-                    EXIMBAY.request_pay({{ data }});
-                }
-            </script>
-            <body onload="payment()">
-            </body>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <link rel="icon" href="data:,">
+                <script type="text/javascript" src="{{ sdk_url }}"></script>
+                <script type="text/javascript">
+                    const EXIMBAY_PAYLOAD = {{ data | tojson }};
+                    
+                    function payment() {
+                        EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
+                    }
+                    
+                    (function run() {
+                    if (document.readyState !== "loading") {
+                        // DOM already parsed → run immediately
+                        payment();
+                    } else {
+                        // Wait until DOM is ready
+                        document.addEventListener("DOMContentLoaded", payment, { once: true });
+                    }
+                    })();
+                </script>
+            </head>
             </html>
             """
     
-        api_url = EximbayPaymentPlugin.settings.get('url')
+        request_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
         data = {
-            "sdk_url": urljoin(api_url, EXIMBAY_SDK_URL),
-            "data": transaction_data,
+            "sdk_url": request_url,
+            "data": request_data,
             }
         
         html = render_template_string(htmlTemplate, **data)
-        html = html.replace("&#39;",'"')
 
         return html
 
-    def _init_payment_page(self, transaction_data):
-        """Initialize payment page to connect eximbay payment redirect
-        """
-        request_url = urljoin(EximbayPaymentPlugin.settings.get('url'), EXIMBAY_READY_URL)
+    # def _init_payment_page(self, transaction_data):
+    #     """Initialize payment page to connect eximbay payment redirect
+    #     """
+    #     request_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_READY_URL)
 
-        resp = requests.post(request_url, headers="", json=transaction_data)
-        try:
-            resp.raise_for_status()
-        except request.RequestException as exc:
-            EximbayPaymentPlugin.logger.error('Could not initialize payment: %s', exc.response.text)
-            raise Exception('Could not initialize payment')
-        return resp.json()
+    #     resp = requests.post(request_url, headers="", json=transaction_data)
+    #     try:
+    #         resp.raise_for_status()
+    #     except request.RequestException as exc:
+    #         current_plugin.logger.error('Could not initialize payment: %s', exc.response.text)
+    #         raise Exception('Could not initialize payment')
+    #     return resp.json()
 
     def _process_args(self):
-        RHPaymentBase._process_args(self)
+        super()._process_args()
         if 'eximbay' not in get_active_payment_plugins(self.event):
             raise NotFound
 
     def _process(self):
         isKor = request.args.get('country','') == "KR"
         
-        transaction_params = self._get_transaction_parameters(isKor)
+        transaction_data = self._get_transaction_parameters(isKor)
         
-        html = self._generate_page(transaction_params)
+        html = self._generate_page(transaction_data)
         
         return html
 
 
-
-class RHEximbayNotify(RH):
+class RHEximbayNotify(RHEximbayBase):
     """Handler for notification from Eximbay service"""
-
-    CSRF_ENABLED = False
-
-    def _process_args(self):
-        self.token = request.args['token']
-        self.registration = Registration.query.filter_by(uuid=self.token).first()
-        if not self.registration:
-            raise BadRequest
 
     def _process(self):
         """process the reply from Eximbay about the transaction."""
@@ -333,7 +352,7 @@ class RHEximbayNotify(RH):
         expected_amount = float(self.registration.price)
         expected_currency = self.registration.currency
         amount = float(assert_data['amount'])
-        currency = assert_data.get['currency']
+        currency = assert_data['currency']
         
         if expected_amount == amount and expected_currency == currency:
             return True
@@ -426,31 +445,19 @@ class RHEximbayNotify(RH):
         return response.json()
 
 
-class RHEximbayReturn(RH):
+class RHEximbayReturn(RHEximbayBase):
     """Confirmation message after payment"""
-
-    CSRF_ENABLED = False
-
-    def _process_args(self):
-        self.token = request.args['token']
-        try:
-            if self.token is not None:
-                pass
-        except TransactionFailure:
-            flash(_('Your payment could not be confirmed. Please contact the event organizers.'), 'warning')
-        
-        self.registration = Registration.query.filter_by(uuid=self.token).first()
-        if not self.registration:
-            raise BadRequest
 
     def _process(self):
         transaction = self.registration.transaction
+        
         try:
             if hasattr(transaction, 'status') and \
                 transaction.status == TransactionStatus.successful:
                 flash(_('Your payment has been confirmed.'), 'success')
-            else:
-                flash(_('Your payment has failed.'), 'info')
+            # else:
+            #     # issue: logout for development
+            #     flash(_('Your payment has failed.'), 'info')
         except TransactionFailure:
             flash(_('Your payment has failed.'), 'error')
         
