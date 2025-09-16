@@ -39,12 +39,10 @@ from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
 from indico_payment_eximbay import _
-from indico_payment_eximbay.plugin import EximbayPaymentPlugin
 from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_SDK_URL,
                                          EXIMBAY_READY_URL, EXIMBAY_VERIFY_URL,
                                          get_request_header)
-from indico_payment_eximbay.notifications import (notify_payment_error,
-                                                  notify_account_error)
+from indico_payment_eximbay.notifications import notify_account_error, notify_payment_error
 
 
 class TransactionFailure(Exception):
@@ -60,12 +58,12 @@ class TransactionFailure(Exception):
 
 
 class RHEximbayBase(RH):
-    """Request Handler for asynchronous callbacks from SIXPay.
+    """Request Handler for asynchronous callbacks from Eximbay.
 
     These handlers are used either by
 
-    - the user, when he is redirected from SIXPay back to Indico
-    - SIXPay, when it sends back the result of a transaction
+    - the user, when he is redirected from Eximbay back to Indico
+    - Eximbay, when it sends back the result of a transaction
     """
 
     CSRF_ENABLED = False
@@ -117,8 +115,10 @@ class RHInitEximbayPayment(RHPaymentBase):
             mid = event_settings.get('account_id2', None)
             api_key = event_settings.get('account_key2', None)
         
-        # check security Key validation
-        if api_key is None or len(api_key) != 25:
+        # check API Key validation
+        if api_key and len(api_key) == 25:
+            pass
+        else:
             return None
         
         format_map = {
@@ -135,9 +135,6 @@ class RHInitEximbayPayment(RHPaymentBase):
         order_description = event_settings['order_description'].format(**format_map)
         order_identifier = event_settings['order_identifier'].format(**format_map)
 
-        # max 30 characters
-        order_id = "{0}_{1:%m%d%H%M%S}".format(order_identifier, datetime.now())[:30]
-        
         # see the Eximbay Manual on what these things mean
         # where to asynchronously call back from Eximbay
         # https://developer.eximbay.com/eximbay/api_list/reference.html#create_FGkey
@@ -147,20 +144,20 @@ class RHInitEximbayPayment(RHPaymentBase):
             },
             "payment": {
                 "transaction_type": "PAYMENT",
-                "payment_method": "P000",
-                "lang": "EN",
-                "order_id": order_id,                           # orderId : unique value (30 char)
-                "currency": self.registration.currency,
-                "amount": str(self.registration.price),         # total price
+                "payment_method": "P000",                       # P000: Credit Card
+                "lang": "EN",                                   # default: EN
+                "order_id": order_identifier[:30],              # orderId : unique value (max. 30 char)
+                "currency": self.registration.currency,         # currency: USD, EUR, KRW ...
+                "amount": str(self.registration.price),         # total price > 0
             },
             "buyer": {
                 "name": self.registration.full_name,
                 "email": self.registration.email,
             },
             "product": [{
-                "name": order_description,
-                "unit_price": str(self.registration.price),
-                "quantity": str(1),
+                "name": order_description[:255],                # product name: max 255 char
+                "unit_price": str(self.registration.price),     # product price > 0
+                "quantity": str(1),                             # product quantity > 0
                 "link":""                                       # open marker일 경우 필수라고 하는데 확인이 필요함
             }],
             "url": {
@@ -168,7 +165,7 @@ class RHInitEximbayPayment(RHPaymentBase):
                 "status_url": url_for_plugin('payment_eximbay.notify', self.registration.locator.uuid, _external=True),
             },
             "settings": {
-                "display_type": "R",
+                "display_type": "R",                            # R: redirect, P: popup, M: mobile
             },
         }
 
@@ -212,8 +209,8 @@ class RHInitEximbayPayment(RHPaymentBase):
             </html>
             """
     
-        request_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
-        data = { "sdk_url": request_url, "data": request_data }
+        sdk_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
+        data = { "sdk_url": sdk_url, "data": request_data }
         
         html = render_template_string(htmlTemplate, **data)
 
@@ -387,8 +384,6 @@ class RHEximbayNotify(RHEximbayBase):
         for key in assert_data:
             if key not in except_keys:
                 store_data[key] = assert_data.get(key)
-        
-        store_data['valid_trans'] = valid_trans
         
         if not valid_trans:
             store_data['resmsg'] = "Transaction with the Test server."

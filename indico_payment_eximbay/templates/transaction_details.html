@@ -1,14 +1,14 @@
 {% extends 'events/payment/transaction_details.html' %}
 {% block details %}
     {% set txn = transaction.data.Transaction %}
-    {% set fontColor = "inherit" if txn.valid_trans else "red" %}
+    {% set fontColor = "inherit" if txn.resmsg.startswith('Success') else "#8000FF" %}
 
     <hr>
     
     {% for label, value in {
-        'Payment Order ID': txn.order_id or txn.ref,
-        'Authorization Code': txn.auth_code or txn.authcode,
-        'Timestamp': txn.resdt,
+        'Order ID': txn.order_id or txn.ref,
+        'Authorization code': txn.auth_code or txn.authcode,
+        'Timestamp': txn.transaction_date or txn.resdt,
         'Message': txn.resmsg
     }.items() %}
         <dt>{% trans %}{{ label }}{% endtrans %}</dt>

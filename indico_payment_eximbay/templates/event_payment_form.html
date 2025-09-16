@@ -17,7 +17,9 @@
     <dt>Total amount</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <hr>
-    <dt>Item Name</dt>
+    <dt>Order</dt>
+    <dd>{{ order_id }}</dd>
+    <dt>Item name</dt>
     <dd>{{ item_name }}</dd>
 </dl>
 

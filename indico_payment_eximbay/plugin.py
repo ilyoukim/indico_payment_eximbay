@@ -108,6 +108,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
 
         api_url = event_settings.get('url')
         
+        data['order_id'] = event_settings['order_identifier'].format(**format_map)
         data['item_name'] = event_settings['order_description'].format(**format_map)
         
         # Display message
