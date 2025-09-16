@@ -158,14 +158,13 @@ class RHInitEximbayPayment(RHPaymentBase):
                 "name": order_description[:255],                # product name: max 255 char
                 "unit_price": str(self.registration.price),     # product price > 0
                 "quantity": str(1),                             # product quantity > 0
-                "link":""                                       # open marker일 경우 필수라고 하는데 확인이 필요함
             }],
             "url": {
                 "return_url": url_for_plugin('payment_eximbay.return', self.registration.locator.uuid, _external=True),
                 "status_url": url_for_plugin('payment_eximbay.notify', self.registration.locator.uuid, _external=True),
             },
             "settings": {
-                "display_type": "R",                            # R: redirect, P: popup, M: mobile
+                "display_type": "R",                            # R: redirect, P: popup
             },
         }
 
