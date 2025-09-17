@@ -21,7 +21,6 @@ Callbacks for asynchronous replies by the Eximbay service and to redirect the us
 
 import json
 import requests
-from datetime import datetime
 from urllib.parse import urljoin
 
 from flask import flash, redirect, request, render_template_string
@@ -307,18 +306,17 @@ class RHEximbayNotify(RHEximbayBase):
         
         mids = [settings.get('account_id', ''),
                 settings.get('account_id2', '')]
-
-        resCode = transaction_data.get('rescode' ,'').strip()
+        
+        mid = transaction_data('mid', '').strip()
+        resCode = transaction_data.get('rescode', '').strip()
         resMsg = transaction_data.get('resmsg', '').strip()
         
-        if transaction_data['mid'] in mids and \
-            resCode == '0000' and resMsg == "Success":
+        if (mid in mids) and resCode == '0000' and resMsg == "Success":
             return True
-        else:
-            manager_email = settings.get('notification_mail')
 
-            notify_account_error(self.registration, transaction_data, manager_email)
-            return False
+        manager_email = settings.get('notification_mail')
+        notify_account_error(self.registration, transaction_data, manager_email)
+        return False
     
     def _verify_transaction(self, assert_data):
         """Verify transaction with Eximbay verify api
@@ -332,14 +330,14 @@ class RHEximbayNotify(RHEximbayBase):
 
         if resCode == '0000':
             return True
-        else:
-            settings = current_plugin.event_settings.get_all(self.event)
-            manager_email = settings.get('notification_mail')
-            
-            notify_payment_error(self.registration, assert_data, manager_email)
-            notify_payment_error(self.registration, assert_data)
-            
-            return False
+        
+        settings = current_plugin.event_settings.get_all(self.event)
+        manager_email = settings.get('notification_mail')
+        
+        notify_payment_error(self.registration, assert_data, manager_email)
+        notify_payment_error(self.registration, assert_data)
+        
+        return False
 
     def _verify_amount(self, assert_data):
         """Verify the amount and currency of the payment.
@@ -355,15 +353,15 @@ class RHEximbayNotify(RHEximbayBase):
         
         if expected_amount == amount and expected_currency == currency:
             return True
-        else:
-            manager_email = settings.get('notification_mail')
-            # current_plugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
-            #                                 amount, currency, expected_amount, expected_currency)
-            
-            notify_amount_inconsistency(self.registration, amount, currency)
-            notify_payment_error(self.registration, assert_data, manager_email)
-            
-            return False
+        
+        manager_email = settings.get('notification_mail')
+        # current_plugin.logger.warning("Payment doesn't match event's fee: %s %s != %s %s",
+        #                                 amount, currency, expected_amount, expected_currency)
+        
+        notify_amount_inconsistency(self.registration, amount, currency)
+        notify_payment_error(self.registration, assert_data, manager_email)
+        
+        return False
 
     def _register_payment(self, assert_data):
         """Register the transaction as paid."""
