@@ -22,16 +22,16 @@ def notify_account_error(registration, data, to_address):
 
 @email_sender
 def notify_payment_error(registration, data, to_address=None):
-    ## minimum params
-    keys = ['order_id','amount','currency','access_country','email',
-            'payment_method','transaction_date','transaction_id',
-            'card_holder','card_number4','auth_code',
-            'rescode','resmsg']
-    
-    newdata = {}
-    for key in data:
-        if key in keys:
-            newdata[key] = data.get(key)
+    # Define the allowed keys for the notification data
+    allowed_keys = {
+        'order_id', 'amount', 'currency', 'access_country', 'email',
+        'payment_method', 'transaction_date', 'transaction_id',
+        'card_holder', 'card_number4', 'auth_code',
+        'rescode', 'resmsg'
+    }
+
+    # Filter the input data to include only allowed keys
+    newdata = {key: data.get(key, '') for key in allowed_keys}
     
     event = registration.registration_form.event
     
