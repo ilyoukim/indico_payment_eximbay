@@ -47,16 +47,16 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
     default_settings = {
         'method_name': 'Online Payment with Eximbay',
         'url': EXIMBAY_SERVICE_DOMAIN,
-        'account_id': None,
-        'account_key': None,
-        'account_id2': None,
-        'account_key2': None,
+        'account_id': '',
+        'account_key': '',
+        'account_id2': '',
+        'account_key2': '',
         'order_description': '{event_title} {registration_form_title}',
         'order_identifier': 'e{event_id}f{registration_form_id}r{registration_id}',
         'announcement': '',
-        'notification_mail': None
+        'notification_mail': ''
     }
-    #: per event default settings - use the global settings
+    #: per event default settings - use the global settings as fallback
     default_event_settings = {
         'enabled': False,
         'method_name': None,
@@ -107,9 +107,11 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         }
 
         api_url = event_settings.get('url')
+        order_identifier = event_settings['order_identifier'].format(**format_map)
+        order_description = event_settings['order_description'].format(**format_map)
         
-        data['order_id'] = event_settings['order_identifier'].format(**format_map)
-        data['item_name'] = event_settings['order_description'].format(**format_map)
+        data['order_id'] = order_identifier[:30]
+        data['item_name'] = order_description[:255]
         
         # Display message
         data['test'] = (api_url != EXIMBAY_SERVICE_DOMAIN)

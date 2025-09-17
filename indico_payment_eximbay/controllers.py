@@ -109,11 +109,11 @@ class RHInitEximbayPayment(RHPaymentBase):
         is_korean = params.get('issuer_country') == "KR"
 
         if is_korean:
-            mid = event_settings.get('account_id', None)
-            api_key = event_settings.get('account_key', None)
+            mid = event_settings.get('account_id', '')
+            api_key = event_settings.get('account_key', '')
         else:
-            mid = event_settings.get('account_id2', None)
-            api_key = event_settings.get('account_key2', None)
+            mid = event_settings.get('account_id2', '')
+            api_key = event_settings.get('account_key2', '')
         
         # check API Key validation
         if api_key and len(api_key) == 25:
@@ -178,41 +178,43 @@ class RHInitEximbayPayment(RHPaymentBase):
         return transaction_params
     
     def _generate_page(self, request_data):
-        """Initialize payment page to connect eximbay payment redirect
-        """
-        htmlTemplate = """
-            <!doctype html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <link rel="icon" href="data:,">
-                <script type="text/javascript" src="{{ sdk_url }}"></script>
-                <script type="text/javascript">
-                    const EXIMBAY_PAYLOAD = {{ data | tojson }};
-
-                    function payment() {
-                        EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
-                    }
-                    
-                    (function run() {
+        """Generate the HTML page to redirect the user to Eximbay payment."""
+        html_template = """
+        <!doctype html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <link rel="icon" href="data:,">
+            <script type="text/javascript" src="{{ sdk_url }}"></script>
+            <script type="text/javascript">
+                function payment() {
+                    const EXIMBAY_PAYLOAD = {{ data | tojson | safe }};
+                    EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
+                }
+                
+                (function() {
                     if (document.readyState !== "loading") {
-                        // DOM already parsed → run immediately
                         payment();
                     } else {
-                        // Wait until DOM is ready
                         document.addEventListener("DOMContentLoaded", payment, { once: true });
                     }
-                    })();
-                </script>
-            </head>
-            </html>
-            """
-    
-        sdk_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
-        data = { "sdk_url": sdk_url, "data": request_data }
-        
-        html = render_template_string(htmlTemplate, **data)
+                })();
+            </script>
+        </head>
+        <body>
+            <noscript>
+                <p>JavaScript is required to proceed with the payment.</p>
+            </noscript>
+        </body>
+        </html>
+        """
 
+        sdk_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
+        html = render_template_string(
+            html_template,
+            sdk_url=sdk_url,
+            data=request_data
+        )
         return html
 
     # def _init_payment_page(self, transaction_data):
@@ -372,18 +374,15 @@ class RHEximbayNotify(RHEximbayBase):
         
         valid_trans = (api_url == "https://secureapi.eximbay.com")
         
-        ## not necessary params
-        except_keys = ['ver','transaction_type','mid',
-                       'payment_method','email',
-                       'card_holder','card_number1','card_number4',
-                       'pay_to','fgkey'
-                       ]
-        
-        store_data = {}
-        for key in assert_data:
-            if key not in except_keys:
-                store_data[key] = assert_data.get(key)
-        
+        # Exclude unnecessary parameters from being stored
+        exclude_keys = {
+            'ver', 'transaction_type', 'mid', 'payment_method', 'email',
+            'card_holder', 'card_number1', 'card_number4', 'pay_to', 'fgkey'
+        }
+
+        # Store only relevant transaction data
+        store_data = {key: value for key, value in assert_data.items() if key not in exclude_keys}
+
         if not valid_trans:
             store_data['resmsg'] = "Transaction with the Test server."
         
@@ -415,22 +414,21 @@ class RHEximbayNotify(RHEximbayBase):
         
         api_url = settings.get('url')
 
-        res_mid = data.get('mid', '')
-        mid1 = settings.get('account_id', None)
-        mid2 = settings.get('account_id2', None)
+        res_mid = data.get('mid', '').strip()
+        mid1 = settings.get('account_id', '').strip()
+        mid2 = settings.get('account_id2', '').strip()
 
         if res_mid == mid1:
-            api_key = settings.get('account_key', None)
+            api_key = settings.get('account_key', '').strip()
         elif res_mid == mid2:
-            api_key = settings.get('account_key2', None)
+            api_key = settings.get('account_key2', '').strip()
         else:
-            raise TransactionFailure(step=task, details="MID error")
-        
-        if api_key is None:
-            raise TransactionFailure(step=task, details="Security Key error")
-        
-        request_url = urljoin(api_url, endpoint)
+            raise TransactionFailure(step=task, details="Invalid MID in transaction data")
 
+        if not api_key or len(api_key) != 25:
+            raise TransactionFailure(step=task, details="Invalid or missing API Security Key")
+
+        request_url = urljoin(api_url, endpoint)
         headers = get_request_header(api_key)
 
         try:
