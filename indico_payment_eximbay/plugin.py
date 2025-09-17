@@ -115,7 +115,7 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         
         # Display message
         data['test'] = (api_url != EXIMBAY_SERVICE_DOMAIN)
-        data['announcement'] = event_settings.get('announcement')
+        data['announcement'] = event_settings.get('announcement', '')
 
-        data['korean'] = bool(event_settings.get('account_id', None))
-        data['global'] = bool(event_settings.get('account_id2', None))
+        data['korean'] = bool(event_settings.get('account_id', ''))
+        data['global'] = bool(event_settings.get('account_id2', ''))

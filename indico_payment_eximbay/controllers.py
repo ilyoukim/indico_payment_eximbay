@@ -92,11 +92,11 @@ class RHInitEximbayPayment(RHPaymentBase):
         except requests.HTTPError:
             raise TransactionFailure(step='ready', details=response.text)
         
-        resCode = recv.get("rescode", "").strip()
-        resMsg = recv.get("resmsg", "").strip()
+        resCode = recv.get("rescode", '').strip()
+        resMsg = recv.get("resmsg", '').strip()
 
         if resCode == "0000" and resMsg == "Success":
-            return recv.get("fgkey", "").strip()
+            return recv.get("fgkey", '').strip()
         else:
             raise TransactionFailure(step='ready', details=response.text)
 
@@ -191,7 +191,7 @@ class RHInitEximbayPayment(RHPaymentBase):
                     const EXIMBAY_PAYLOAD = {{ data | tojson | safe }};
                     EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
                 }
-                
+
                 (function() {
                     if (document.readyState !== "loading") {
                         payment();
@@ -305,11 +305,11 @@ class RHEximbayNotify(RHEximbayBase):
         """
         settings = current_plugin.event_settings.get_all(self.event)
         
-        mids = [settings.get('account_id', None),
-                settings.get('account_id2', None)]
+        mids = [settings.get('account_id', ''),
+                settings.get('account_id2', '')]
 
-        resCode = transaction_data.get('rescode','').strip()
-        resMsg = transaction_data.get('resmsg','').strip()
+        resCode = transaction_data.get('rescode' ,'').strip()
+        resMsg = transaction_data.get('resmsg', '').strip()
         
         if transaction_data['mid'] in mids and \
             resCode == '0000' and resMsg == "Success":
@@ -328,7 +328,7 @@ class RHEximbayNotify(RHEximbayBase):
         response = self._perform_request('verify', EXIMBAY_VERIFY_URL, assert_data)
         res = json.load(response.text)
         
-        resCode = res.get('rescode','').strip()
+        resCode = res.get('rescode', '').strip()
 
         if resCode == '0000':
             return True
@@ -388,8 +388,8 @@ class RHEximbayNotify(RHEximbayBase):
         
         register_transaction(
             registration = self.registration,
-            amount = float(assert_data.get('amount','0')),
-            currency = assert_data.get('currency',''),
+            amount = float(assert_data.get('amount')),
+            currency = assert_data.get('currency'),
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
             data = {'Transaction': store_data}
