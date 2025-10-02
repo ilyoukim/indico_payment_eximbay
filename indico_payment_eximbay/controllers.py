@@ -442,16 +442,16 @@ class RHEximbayReturn(RHEximbayBase):
     """Confirmation message after payment"""
 
     def _process(self):
-        transaction = self.registration.transaction
-        
-        try:
-            if hasattr(transaction, 'status') and \
-                transaction.status == TransactionStatus.successful:
-                flash(_('Your payment has been confirmed.'), 'success')
-            # else:
-            #     # issue: logout for development
-            #     flash(_('Your payment has failed.'), 'info')
-        except TransactionFailure:
-            flash(_('Your payment has failed.'), 'error')
+        # transaction = self.registration.transaction
+        #
+        # try:
+        #     if hasattr(transaction, 'status') and \
+        #         transaction.status == TransactionStatus.successful:
+        #         flash(_('Your payment has been confirmed.'), 'success')
+        #     # else:
+        #     #     # issue: logout for development
+        #     #     flash(_('Your payment has failed.'), 'info')
+        # except TransactionFailure:
+        #     flash(_('Your payment has failed.'), 'error')
         
         return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
