@@ -16,9 +16,13 @@ def notify_account_error(registration, data, to_address):
     event = registration.registration_form.event
     # to_address = event.creator.email
     
+    paymethod = get_paymethod(data.get('payment_method',''))
+    
     with event.creator.force_user_locale():
         tpl = get_template_module('payment_eximbay:emails/account_error_notify.html',
-                                  event=event, registration=registration, data=data)
+                                    event=event, registration=registration, data=data,
+                                    paymethod=paymethod, orderID=data.get('order_id',''),
+                                    errCode=data.get('rescode',''), errMsg=data.get('resmsg',''))
         
         return make_email(to_address, template=tpl, html=True)
 
