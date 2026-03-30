@@ -355,8 +355,8 @@ class RHEximbayNotify(RHEximbayBase):
         
         expected_amount = float(self.registration.price)
         expected_currency = self.registration.currency
-        amount = float(assert_data['amount'])
-        currency = assert_data['currency']
+        amount = float(assert_data.get('amount', '0').strip())
+        currency = assert_data.get('currency', '').strip()
         
         if expected_amount == amount and expected_currency == currency:
             return True
@@ -393,8 +393,8 @@ class RHEximbayNotify(RHEximbayBase):
         
         register_transaction(
             registration = self.registration,
-            amount = float(assert_data.get('amount')),
-            currency = assert_data.get('currency'),
+            amount = float(assert_data.get('amount', '0').strip()),
+            currency = assert_data.get('currency', '').strip(),
             action = TransactionAction.complete,
             provider = PROVIDER_EXIMBAY,
             data = {'Transaction': store_data}
@@ -417,7 +417,7 @@ class RHEximbayNotify(RHEximbayBase):
         """
         settings = current_plugin.event_settings.get_all(self.event)
         
-        api_url = settings.get('url')
+        api_url = settings.get('url', '').strip()
 
         res_mid = data.get('mid', '').strip()
         mid1 = settings.get('account_id', '').strip()
@@ -430,7 +430,7 @@ class RHEximbayNotify(RHEximbayBase):
         else:
             raise TransactionFailure(step=task, details="Invalid MID in transaction data")
 
-        if not api_key or len(api_key) != 25:
+        if len(api_key) != 25:
             raise TransactionFailure(step=task, details="Invalid or missing API Security Key")
 
         request_url = urljoin(api_url, endpoint)
