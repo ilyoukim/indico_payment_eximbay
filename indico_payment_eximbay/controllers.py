@@ -146,7 +146,7 @@ class RHInitEximbayPayment(RHPaymentBase):
                 "transaction_type": "PAYMENT",
                 "payment_method": "P000",                       # P000: Credit Card
                 "lang": "EN",                                   # default: EN
-                "order_id": order_identifier[:30],              # orderId : unique value (max. 30 char)
+                "order_id": order_identifier[-30:],             # orderId : unique value (max. 30 char)
                 "currency": self.registration.currency,         # currency: USD, EUR, KRW ...
                 "amount": str(self.registration.price),         # total price > 0
             },
@@ -155,7 +155,7 @@ class RHInitEximbayPayment(RHPaymentBase):
                 "email": self.registration.email,
             },
             "product": [{
-                "name": order_description[:255],                # product name: max 255 char
+                "name": order_description[-255:],               # product name: max 255 char
                 "unit_price": str(self.registration.price),     # product price > 0
                 "quantity": str(1),                             # product quantity > 0
             }],

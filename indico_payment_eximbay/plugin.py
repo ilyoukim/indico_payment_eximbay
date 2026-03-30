@@ -110,8 +110,8 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         order_identifier = event_settings['order_identifier'].format(**format_map)
         order_description = event_settings['order_description'].format(**format_map)
         
-        data['order_id'] = order_identifier[:30]
-        data['item_name'] = order_description[:255]
+        data['order_id'] = order_identifier[-30:]
+        data['item_name'] = order_description[-255:]
         
         # Display message
         data['test'] = (api_url != EXIMBAY_SERVICE_DOMAIN)
