@@ -109,7 +109,7 @@ EXIMBAY_PAYMETHOD = {
 
 
 def get_paymethod(code):
-    EXIMBAY_PAYMETHOD.get(code, code)
+    return str(EXIMBAY_PAYMETHOD.get(code, code))
 
 
 def get_request_header(api_key):
