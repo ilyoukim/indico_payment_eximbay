@@ -21,6 +21,7 @@ Callbacks for asynchronous replies by the Eximbay service and to redirect the us
 
 import json
 import requests
+import textwrap
 from urllib.parse import urljoin
 
 from flask import flash, redirect, request, render_template_string
@@ -32,7 +33,7 @@ from indico.core.plugins import url_for_plugin
 from indico.modules.events.payment.controllers import RHPaymentBase
 from indico.modules.events.payment.models.transactions import TransactionAction
 from indico.modules.events.payment.notifications import notify_amount_inconsistency
-from indico.modules.events.payment.util import TransactionStatus, get_active_payment_plugins, register_transaction
+from indico.modules.events.payment.util import get_active_payment_plugins, register_transaction
 from indico.modules.events.registration.models.registrations import Registration
 from indico.web.flask.util import url_for
 from indico.web.rh import RH
@@ -88,8 +89,8 @@ class RHInitEximbayPayment(RHPaymentBase):
             response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
             response.raise_for_status()
             recv = response.json()
-        except requests.HTTPError:
-            raise TransactionFailure(step='ready', details=response.text)
+        except requests.RequestException as e:
+            raise TransactionFailure(step='ready', details=str(e))
         
         resCode = recv.get("rescode", '').strip()
         resMsg = recv.get("resmsg", '').strip()
@@ -210,7 +211,7 @@ class RHInitEximbayPayment(RHPaymentBase):
 
         sdk_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
         html = render_template_string(
-            html_template,
+            textwrap.dedent(html_template),
             sdk_url=sdk_url,
             data=request_data
         )
@@ -235,19 +236,26 @@ class RHInitEximbayPayment(RHPaymentBase):
             raise NotFound
 
     def _process(self):
-        transaction_data = self._get_transaction_parameters(request.args)
-        
-        html = self._generate_page(transaction_data)
-        
-        return html
+        try:
+            transaction_data = self._get_transaction_parameters(request.args)
+        except TransactionFailure as e:
+            current_plugin.logger.error('Could not initialize Eximbay payment: %s', e.details)
+            flash(_('Payment initialization failed. Please contact the event organizer.'), 'error')
+            return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
+
+        if transaction_data is None:
+            flash(_('Payment is not properly configured. Please contact the event organizer.'), 'error')
+            return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
+
+        return self._generate_page(transaction_data)
 
 
 class RHEximbayNotify(RHEximbayBase):
     """Handler for notification from Eximbay service"""
 
     def _process(self):
-        """process the reply from Eximbay about the transaction."""
-        if self.token is not None:
+        """Process the notification callback from Eximbay about the transaction."""
+        if self.token:
             self._process_confirmation()
         else:
             return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
@@ -307,7 +315,7 @@ class RHEximbayNotify(RHEximbayBase):
         mids = [settings.get('account_id', ''),
                 settings.get('account_id2', '')]
         
-        mid = transaction_data('mid', '').strip()
+        mid = transaction_data.get('mid', '').strip()
         resCode = transaction_data.get('rescode', '').strip()
         resMsg = transaction_data.get('resmsg', '').strip()
         
@@ -323,8 +331,7 @@ class RHEximbayNotify(RHEximbayBase):
         
         https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html#paymentVerify
         """
-        response = self._perform_request('verify', EXIMBAY_VERIFY_URL, assert_data)
-        res = json.load(response.text)
+        res = self._perform_request('verify', EXIMBAY_VERIFY_URL, assert_data)
         
         resCode = res.get('rescode', '').strip()
 
@@ -342,7 +349,7 @@ class RHEximbayNotify(RHEximbayBase):
     def _verify_amount(self, assert_data):
         """Verify the amount and currency of the payment.
 
-        Sends an email but still registers incorrect payments.
+        Sends an email to the manager and rejects registration if amounts mismatch.
         """
         settings = current_plugin.event_settings.get_all(self.event)
         
@@ -432,8 +439,8 @@ class RHEximbayNotify(RHEximbayBase):
         try:
             response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
             response.raise_for_status()
-        except requests.HTTPError:
-            raise TransactionFailure(step=task, details=response.text)
+        except requests.RequestException as e:
+            raise TransactionFailure(step=task, details=str(e))
         
         return response.json()
 
