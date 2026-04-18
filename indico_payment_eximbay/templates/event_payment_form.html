@@ -61,7 +61,7 @@
         </tr>
         <tr>
             <td>
-                {% if korean %}
+                {% if data_korean %}
                     <button id="btn_pay_korean" class="action-button" type="button">
                         Pay Now: Korean
                     </button>
@@ -70,7 +70,7 @@
                 {% endif %}
             </td>
             <td>
-                {% if global %}
+                {% if data_global %}
                     <button id="btn_pay_global" class="action-button" type="button">
                         Pay Now: Global
                     </button>
@@ -85,13 +85,13 @@
 
 <script nonce="{{ get_csp_nonce() }}" src="{{eximbay_url}}/v2/javascriptSDK.js"></script>
 <script nonce="{{ get_csp_nonce() }}">
-    {% if korean %}
+    {% if data_korean %}
         document.getElementById('btn_pay_korean').addEventListener('click', function() {
             EXIMBAY.request_pay( {{ data_korean | tojson | safe }} );
         });
     {% endif %}
 
-    {% if global %}
+    {% if data_global %}
         document.getElementById('btn_pay_global').addEventListener('click', function() {
             EXIMBAY.request_pay( {{ data_global | tojson | safe }} );
         });

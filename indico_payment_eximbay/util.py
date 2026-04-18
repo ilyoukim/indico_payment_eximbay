@@ -157,11 +157,11 @@ def _get_fgkey(api_url, api_key, data):
         raise TransactionFailure(step="ready", details=response.text)
 
 
-def get_transaction_parameters(event_settings, registration, is_korean):
+def get_transaction_params(event_settings, registration, is_kor: bool):
     """Get parameters for creating a transaction request."""
     api_url = event_settings.get("url")
 
-    if is_korean:
+    if is_kor:
         mid = event_settings.get("account_id", "")
         api_key = event_settings.get("account_key", "")
     else:
@@ -172,7 +172,7 @@ def get_transaction_parameters(event_settings, registration, is_korean):
     if api_key and len(api_key) == 25:
         pass
     else:
-        return None
+        return {}
     
     format_map = {
         "user_id": registration.user_id,
@@ -220,7 +220,7 @@ def get_transaction_parameters(event_settings, registration, is_korean):
     }
 
     # Korea Domestic Card
-    if is_korean:
+    if is_kor:
         transaction_params["payment"]["lang"] = "KR"
         transaction_params["settings"]["issuer_country"] = "KR"
     

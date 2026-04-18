@@ -28,7 +28,7 @@ from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
 from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_CURRENCY,
-                                         get_transaction_parameters)
+                                         get_transaction_params)
 
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
@@ -85,12 +85,11 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         """Prepare the payment form shown to registrants
         parameters check: template/event_payment_form.html
         
-        api_url : eximbay payment service url
+        eximbay_url : eximbay payment service url
         valid_trans : to announce for no actual transaction
         
-        korean : translation data set for Korean Credit Card
-        global : translation data set for Global Credit Card
-        api_url : redirection url after click send
+        data_korean : translation data set for Korean Credit Card
+        data_global : translation data set for Global Credit Card
         """
         event_settings = data['event_settings']
         registration = data['registration']
@@ -118,10 +117,13 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         data['test'] = bool(api_url != EXIMBAY_SERVICE_DOMAIN)
         data['announcement'] = event_settings.get('announcement', '')
 
-        data['korean'] = bool(event_settings.get('account_id', ''))
-        data['global'] = bool(event_settings.get('account_id2', ''))
-        
         # api parameters
         data['eximbay_url'] = api_url
-        data['data_korean'] = get_transaction_parameters(event_settings, registration, is_korean=True)
-        data['data_global'] = get_transaction_parameters(event_settings, registration, is_korean=False)
+        data['data_korean'] = {}
+        data['data_global'] = {}
+
+        if event_settings.get('account_id', ''):
+            data['data_korean'] = get_transaction_params(event_settings, registration, is_kor=True)
+        
+        if event_settings.get('account_id2', ''):
+            data['data_global'] = get_transaction_params(event_settings, registration, is_kor=False)
