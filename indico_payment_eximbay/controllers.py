@@ -21,7 +21,7 @@ Callbacks for asynchronous replies by the Eximbay service and to redirect the us
 
 import json
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urlencode, urljoin
 
 from flask import flash, redirect, request
 from flask_pluginengine import current_plugin
@@ -149,7 +149,7 @@ class RHEximbayNotify(RHEximbayBase):
         resCode = transaction_data.get('rescode', '').strip()
         resMsg = transaction_data.get('resmsg', '').strip()
         
-        if (mid in mids) and resCode == '0000' and resMsg == "Success":
+        if (mid in mids) and resCode == '0000' and ("success" in resMsg.lower()):
             return True
 
         manager_email = settings.get('notification_mail')
@@ -170,7 +170,7 @@ class RHEximbayNotify(RHEximbayBase):
         
         manager_email = settings.get('notification_mail')
         
-        notify_payment_error(self.registration, assert_data, manager_email)
+        notify_payment_error(self.registration, {"recv": assert_data, "verify": res}, manager_email, send_all=True)
         notify_payment_error(self.registration, assert_data)
         
         return False
@@ -258,9 +258,10 @@ class RHEximbayNotify(RHEximbayBase):
 
         request_url = urljoin(api_url, endpoint)
         headers = get_request_header(api_key)
+        encoded = {"data": urlencode(data)}
 
         try:
-            response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
+            response = requests.post(url=request_url, headers=headers, data=json.dumps(encoded), timeout=5)
             response.raise_for_status()
         except requests.RequestException as e:
             raise TransactionFailure(step=task, details=str(e))
