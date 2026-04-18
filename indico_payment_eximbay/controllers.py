@@ -67,7 +67,9 @@ class RHEximbayBase(RH):
     CSRF_ENABLED = False
 
     def _process_args(self):
-        self.registration = Registration.query.filter_by(uuid=request.args['token']).first()
+        self.token = request.args['token']
+
+        self.registration = Registration.query.filter_by(uuid=self.token).first()
         if not self.registration:
             raise BadRequest
 
@@ -91,26 +93,30 @@ class RHEximbayNotify(RHEximbayBase):
         
         Assert transaction status from Eximbay
         """
+        event = self.registration.registration_form.event
+        settings = current_plugin.event_settings.get_all(event)
+        
         assert_response = request.form
+        
         try:
             # we have already handled the transaction
             if self._is_duplicate_transaction(assert_response):
                 return
             
             # check the mid, code, message
-            if not self.is_authorized_transaction(assert_response):
+            if not self.is_authorized_transaction(settings, assert_response):
                 return
             
             # verify message with eximbay verify api
-            if not self._verify_transaction(assert_response):
+            if not self._verify_transaction(settings, assert_response):
                 # send error message to manager and register
                 return
             
             # if this matches, the user completed the transaction as requested by Indico
-            if not self._verify_amount(assert_response):
+            if not self._verify_amount(settings, assert_response):
                 return
             
-            self._register_payment(assert_response)
+            self._register_payment(settings, assert_response)
         
         except TransactionFailure as err:
             current_plugin.logger.warning("Eximbay transaction failed during %s: %s", err.step, err.details)
@@ -131,13 +137,11 @@ class RHEximbayNotify(RHEximbayBase):
                 old['transaction_id'] == new['transaction_id']
             )
 
-    def is_authorized_transaction(self, transaction_data):
+    def is_authorized_transaction(self, settings, transaction_data):
         """Verify the transaction data
         
         https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html#afterCalling
         """
-        settings = current_plugin.event_settings.get_all(self.event)
-        
         mids = [settings.get('account_id', ''),
                 settings.get('account_id2', '')]
         
@@ -152,19 +156,18 @@ class RHEximbayNotify(RHEximbayBase):
         notify_account_error(self.registration, transaction_data, manager_email)
         return False
     
-    def _verify_transaction(self, assert_data):
+    def _verify_transaction(self, settings, assert_data):
         """Verify transaction with Eximbay verify api
         
         https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html#paymentVerify
         """
-        res = self._perform_request('verify', EXIMBAY_VERIFY_URL, assert_data)
+        res = self._perform_request(settings, 'verify', EXIMBAY_VERIFY_URL, assert_data)
         
         resCode = res.get('rescode', '').strip()
 
         if resCode == '0000':
             return True
         
-        settings = current_plugin.event_settings.get_all(self.event)
         manager_email = settings.get('notification_mail')
         
         notify_payment_error(self.registration, assert_data, manager_email)
@@ -172,13 +175,11 @@ class RHEximbayNotify(RHEximbayBase):
         
         return False
 
-    def _verify_amount(self, assert_data):
+    def _verify_amount(self, settings, assert_data):
         """Verify the amount and currency of the payment.
 
         Sends an email to the manager and rejects registration if amounts mismatch.
         """
-        settings = current_plugin.event_settings.get_all(self.event)
-        
         expected_amount = float(self.registration.price)
         expected_currency = self.registration.currency
         amount = float(assert_data.get('amount', '0').strip())
@@ -196,11 +197,9 @@ class RHEximbayNotify(RHEximbayBase):
         
         return False
 
-    def _register_payment(self, assert_data):
+    def _register_payment(self, settings, assert_data):
         """Register the transaction as paid."""
         # check transaction with actual transaction with payment url
-        settings = current_plugin.event_settings.get_all(self.event)
-        
         api_url = settings.get('url')
         
         valid_trans = bool(api_url == EXIMBAY_SERVICE_DOMAIN)
@@ -226,7 +225,7 @@ class RHEximbayNotify(RHEximbayBase):
             data = {'Transaction': store_data}
         )
 
-    def _perform_request(self, task, endpoint, data):
+    def _perform_request(self, settings, task, endpoint, data):
         """
         Helper for performing a request against Eximbay
 
@@ -241,8 +240,6 @@ class RHEximbayNotify(RHEximbayBase):
         
         3.2	Querying a Single Transaction
         """
-        settings = current_plugin.event_settings.get_all(self.event)
-        
         api_url = settings.get('url', '').strip()
 
         res_mid = data.get('mid', '').strip()
