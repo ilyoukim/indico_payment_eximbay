@@ -62,18 +62,18 @@
         <tr>
             <td>
                 {% if korean %}
-                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant, issuer_country='KR') }}">
+                    <button class="action-button" onclick="pay_korean()">
                         Pay Now: Korean
-                    </a>
+                    </button>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
             </td>
             <td>
                 {% if global %}
-                    <a class="action-button" href="{{ url_for_plugin('payment_eximbay.init', registration.locator.registrant) }}">
+                    <button class="action-button" onclick="pay_global()">
                         Pay Now: Global
-                    </a>
+                    </button>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
@@ -81,3 +81,22 @@
         </tr>
     </tbody>
 </table>
+
+
+<script src="{{eximbay_url}}/v2/javascriptSDK.js"></script>
+
+{% if korean %}
+    <script>
+        function pay_korean() {
+            EXIMBAY.request_pay( {{ data_korean | tojson | safe }} );
+        }
+    </script>
+{% endif %}
+
+{% if global %}
+    <script>
+        function pay_global() {
+            EXIMBAY.request_pay( {{ data_global | tojson | safe }} );
+        }
+    </script>
+{% endif %}

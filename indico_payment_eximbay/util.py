@@ -17,12 +17,17 @@
 ## along with Eximbay Indico EPayment Plugin;if not, see <http://www.gnu.org/licenses/>.
 
 import base64
+import json
+import requests
+from urllib.parse import urljoin
+
+from indico.core.plugins import url_for_plugin
 
 from indico_payment_eximbay import _
 
 
 # payment provider identifier
-PROVIDER_EXIMBAY = 'eximbay'
+PROVIDER_EXIMBAY = "eximbay"
 
 
 # Eximbay API URLs
@@ -40,10 +45,10 @@ EXIMBAY_CANCEL_URL = "v1/payments/<transaction_id>/cancel"
 
 # https://developer.eximbay.com/eximbay/api_sdk/code-etc.html
 # Support Currency : Eximbay manual - Appendix A
-EXIMBAY_CURRENCY = {'KRW','USD','EUR','GBP','JPY','THB','SGD','RUB','HKD','CAD','AUD'}
+EXIMBAY_CURRENCY = {"KRW","USD","EUR","GBP","JPY","THB","SGD","RUB","HKD","CAD","AUD"}
 
 # Support Language : Eximbay manual - Appendix B
-EXIMBAY_LANGUAGE = {'KR','EN','CN','JP','RU','TH','TW','VN'}
+EXIMBAY_LANGUAGE = {"KR","EN","CN","JP","RU","TH","TW","VN"}
 
 
 # https://developer.eximbay.com/eximbay/api_sdk/code-organization.html
@@ -126,3 +131,99 @@ def get_request_header(api_key):
     }
 
     return headers
+
+
+def _get_fgkey(api_url, api_key, data):
+    """
+    # https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html
+    """
+    request_url = urljoin(api_url, EXIMBAY_READY_URL)
+    
+    headers = get_request_header(api_key)
+
+    try:
+        response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
+        response.raise_for_status()
+        recv = response.json()
+    except requests.RequestException as e:
+        raise TransactionFailure(step="ready", details=str(e))
+    
+    resCode = recv.get("rescode", "").strip()
+    resMsg = recv.get("resmsg", "").strip()
+
+    if resCode == "0000" and resMsg == "Success":
+        return recv.get("fgkey", "").strip()
+    else:
+        raise TransactionFailure(step="ready", details=response.text)
+
+
+def get_transaction_parameters(event_settings, registration, is_korean):
+    """Get parameters for creating a transaction request."""
+    api_url = event_settings.get("url")
+
+    if is_korean:
+        mid = event_settings.get("account_id", "")
+        api_key = event_settings.get("account_key", "")
+    else:
+        mid = event_settings.get("account_id2", "")
+        api_key = event_settings.get("account_key2", "")
+    
+    # check API Key validation
+    if api_key and len(api_key) == 25:
+        pass
+    else:
+        return None
+    
+    format_map = {
+        "user_id": registration.user_id,
+        "event_id": registration.event_id,
+        "event_title": registration.event.title,
+        "registration_form_id": registration.registration_form_id,
+        "registration_form_title": registration.registration_form.title,
+        "registration_db_id": registration.id,
+        "registration_id": registration.friendly_id,
+        "user_firstname": registration.first_name,
+        "user_lastname": registration.last_name,
+    }
+    order_description = event_settings["order_description"].format(**format_map)
+    order_identifier = event_settings["order_identifier"].format(**format_map)
+
+    # https://developer.eximbay.com/eximbay/api_list/reference.html
+    transaction_params = {
+        "merchant": {
+            "mid": mid,                                     # merchant ID
+        },
+        "payment": {
+            "transaction_type": "PAYMENT",
+            "payment_method": "P000",                       # P000: Credit Card
+            "lang": "EN",                                   # default: EN
+            "order_id": order_identifier[-30:],             # orderId : unique value (max. 30 char)
+            "currency": registration.currency,              # currency: USD, EUR, KRW ...
+            "amount": str(registration.price),              # total price > 0
+        },
+        "buyer": {
+            "name": registration.full_name,
+            "email": registration.email,
+        },
+        "product": [{
+            "name": order_description[-255:],               # product name: max 255 char
+            "unit_price": str(registration.price),          # product price > 0
+            "quantity": str(1),                             # product quantity > 0
+        }],
+        "url": {
+            "return_url": url_for_plugin("payment_eximbay.return", registration.locator.uuid, _external=True),
+            "status_url": url_for_plugin("payment_eximbay.notify", registration.locator.uuid, _external=True),
+        },
+        "settings": {
+            "display_type": "R",                            # R: redirect, P: popup
+        },
+    }
+
+    # Korea Domestic Card
+    if is_korean:
+        transaction_params["payment"]["lang"] = "KR"
+        transaction_params["settings"]["issuer_country"] = "KR"
+    
+    transaction_params["fgkey"] = _get_fgkey(api_url, api_key, transaction_params)
+
+    return transaction_params

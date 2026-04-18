@@ -21,10 +21,9 @@ Callbacks for asynchronous replies by the Eximbay service and to redirect the us
 
 import json
 import requests
-import textwrap
 from urllib.parse import urljoin
 
-from flask import flash, redirect, request, render_template_string
+from flask import flash, redirect, request
 from flask_pluginengine import current_plugin
 
 from werkzeug.exceptions import BadRequest, NotFound
@@ -39,9 +38,7 @@ from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
 from indico_payment_eximbay import _
-from indico_payment_eximbay.util import (PROVIDER_EXIMBAY, EXIMBAY_SDK_URL,
-                                         EXIMBAY_READY_URL, EXIMBAY_VERIFY_URL,
-                                         get_request_header)
+from indico_payment_eximbay.util import PROVIDER_EXIMBAY, EXIMBAY_VERIFY_URL, get_request_header
 from indico_payment_eximbay.notifications import notify_account_error, notify_payment_error
 
 
@@ -75,179 +72,7 @@ class RHEximbayBase(RH):
 
 
 class RHInitEximbayPayment(RHPaymentBase):
-    """Handler for initial to use Eximbay service"""
-
-    def _get_fgkey(self, api_url, api_key, data):
-        """
-        # https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html
-        """
-        request_url = urljoin(api_url, EXIMBAY_READY_URL)
-        
-        headers = get_request_header(api_key)
-
-        try:
-            response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
-            response.raise_for_status()
-            recv = response.json()
-        except requests.RequestException as e:
-            raise TransactionFailure(step='ready', details=str(e))
-        
-        resCode = recv.get("rescode", '').strip()
-        resMsg = recv.get("resmsg", '').strip()
-
-        if resCode == "0000" and resMsg == "Success":
-            return recv.get("fgkey", '').strip()
-        else:
-            raise TransactionFailure(step='ready', details=response.text)
-
-    def _get_transaction_parameters(self, params):
-        """Get parameters for creating a transaction request."""
-        event_settings = current_plugin.event_settings.get_all(self.event)
-
-        api_url = event_settings.get('url')
-
-        is_korean = params.get('issuer_country') == "KR"
-
-        if is_korean:
-            mid = event_settings.get('account_id', '')
-            api_key = event_settings.get('account_key', '')
-        else:
-            mid = event_settings.get('account_id2', '')
-            api_key = event_settings.get('account_key2', '')
-        
-        # check API Key validation
-        if api_key and len(api_key) == 25:
-            pass
-        else:
-            return None
-        
-        format_map = {
-            'user_id': self.registration.user_id,
-            'event_id': self.registration.event_id,
-            'event_title': self.registration.event.title,
-            'registration_form_id': self.registration.registration_form_id,
-            'registration_form_title': self.registration.registration_form.title,
-            'registration_db_id': self.registration.id,
-            'registration_id': self.registration.friendly_id,
-            'user_firstname': self.registration.first_name,
-            'user_lastname': self.registration.last_name,
-        }
-        order_description = event_settings['order_description'].format(**format_map)
-        order_identifier = event_settings['order_identifier'].format(**format_map)
-
-        # see the Eximbay Manual on what these things mean
-        # where to asynchronously call back from Eximbay
-        # https://developer.eximbay.com/eximbay/api_list/reference.html#create_FGkey
-        transaction_params = {
-            "merchant": {
-                "mid": mid,                                     # merchant ID
-            },
-            "payment": {
-                "transaction_type": "PAYMENT",
-                "payment_method": "P000",                       # P000: Credit Card
-                "lang": "EN",                                   # default: EN
-                "order_id": order_identifier[-30:],             # orderId : unique value (max. 30 char)
-                "currency": self.registration.currency,         # currency: USD, EUR, KRW ...
-                "amount": str(self.registration.price),         # total price > 0
-            },
-            "buyer": {
-                "name": self.registration.full_name,
-                "email": self.registration.email,
-            },
-            "product": [{
-                "name": order_description[-255:],               # product name: max 255 char
-                "unit_price": str(self.registration.price),     # product price > 0
-                "quantity": str(1),                             # product quantity > 0
-            }],
-            "url": {
-                "return_url": url_for_plugin('payment_eximbay.return', self.registration.locator.uuid, _external=True),
-                "status_url": url_for_plugin('payment_eximbay.notify', self.registration.locator.uuid, _external=True),
-            },
-            "settings": {
-                "display_type": "R",                            # R: redirect, P: popup
-            },
-        }
-
-        # Korea Domestic Card
-        if is_korean:
-            transaction_params['payment']['lang'] = 'KR'
-            transaction_params['settings']['issuer_country'] = 'KR'
-        
-        transaction_params['fgkey'] = self._get_fgkey(api_url, api_key, transaction_params)
-
-        return transaction_params
-    
-    def _generate_page(self, request_data):
-        """Generate the HTML page to redirect the user to Eximbay payment."""
-        html_template = """
-        <!doctype html>
-        <html lang="en">
-        <head>
-            <meta charset="UTF-8">
-            <link rel="icon" href="data:,">
-            <script type="text/javascript" src="{{ sdk_url }}"></script>
-            <script type="text/javascript">
-                function payment() {
-                    const EXIMBAY_PAYLOAD = {{ data | tojson | safe }};
-                    EXIMBAY.request_pay(EXIMBAY_PAYLOAD);
-                }
-
-                (function() {
-                    if (document.readyState !== "loading") {
-                        payment();
-                    } else {
-                        document.addEventListener("DOMContentLoaded", payment, { once: true });
-                    }
-                })();
-            </script>
-        </head>
-        <body>
-            <noscript>
-                <p>JavaScript is required to proceed with the payment.</p>
-            </noscript>
-        </body>
-        </html>
-        """
-
-        sdk_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_SDK_URL)
-        html = render_template_string(
-            textwrap.dedent(html_template),
-            sdk_url=sdk_url,
-            data=request_data
-        )
-        return html
-
-    # def _init_payment_page(self, transaction_data):
-    #     """Initialize payment page to connect eximbay payment redirect
-    #     """
-    #     request_url = urljoin(current_plugin.settings.get('url'), EXIMBAY_READY_URL)
-
-    #     resp = requests.post(request_url, headers="", json=transaction_data)
-    #     try:
-    #         resp.raise_for_status()
-    #     except request.RequestException as exc:
-    #         current_plugin.logger.error('Could not initialize payment: %s', exc.response.text)
-    #         raise Exception('Could not initialize payment')
-    #     return resp.json()
-
-    def _process_args(self):
-        super()._process_args()
-        if 'eximbay' not in get_active_payment_plugins(self.event):
-            raise NotFound
-
-    def _process(self):
-        try:
-            transaction_data = self._get_transaction_parameters(request.args)
-        except TransactionFailure as e:
-            current_plugin.logger.error('Could not initialize Eximbay payment: %s', e.details)
-            flash(_('Payment initialization failed. Please contact the event organizer.'), 'error')
-            return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
-
-        if transaction_data is None:
-            flash(_('Payment is not properly configured. Please contact the event organizer.'), 'error')
-            return redirect(url_for('event_registration.display_regform', self.registration.locator.registrant))
-
-        return self._generate_page(transaction_data)
+     """Handler for initial to use Eximbay service"""
 
 
 class RHEximbayNotify(RHEximbayBase):

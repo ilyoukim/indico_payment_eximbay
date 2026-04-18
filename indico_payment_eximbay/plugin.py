@@ -27,7 +27,8 @@ from indico.core.plugins import IndicoPlugin, url_for_plugin
 from indico.modules.events.payment import PaymentPluginMixin
 
 from indico_payment_eximbay.forms import EventSettingsForm, PluginSettingsForm
-from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_CURRENCY)
+from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_CURRENCY,
+                                         get_transaction_parameters)
 
 
 class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
@@ -114,8 +115,13 @@ class EximbayPaymentPlugin(PaymentPluginMixin, IndicoPlugin):
         data['item_name'] = order_description[-255:]
         
         # Display message
-        data['test'] = (api_url != EXIMBAY_SERVICE_DOMAIN)
+        data['test'] = bool(api_url != EXIMBAY_SERVICE_DOMAIN)
         data['announcement'] = event_settings.get('announcement', '')
 
         data['korean'] = bool(event_settings.get('account_id', ''))
         data['global'] = bool(event_settings.get('account_id2', ''))
+        
+        # api parameters
+        data['eximbay_url'] = api_url
+        data['data_korean'] = get_transaction_parameters(event_settings, registration, is_korean=True)
+        data['data_global'] = get_transaction_parameters(event_settings, registration, is_korean=False)
