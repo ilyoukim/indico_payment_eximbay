@@ -38,7 +38,8 @@ from indico.web.flask.util import url_for
 from indico.web.rh import RH
 
 from indico_payment_eximbay import _
-from indico_payment_eximbay.util import PROVIDER_EXIMBAY, EXIMBAY_VERIFY_URL, get_request_header
+from indico_payment_eximbay.util import (EXIMBAY_SERVICE_DOMAIN, EXIMBAY_VERIFY_URL,
+                                        PROVIDER_EXIMBAY, get_request_header)
 from indico_payment_eximbay.notifications import notify_account_error, notify_payment_error
 
 
@@ -202,7 +203,7 @@ class RHEximbayNotify(RHEximbayBase):
         
         api_url = settings.get('url')
         
-        valid_trans = (api_url == "https://secureapi.eximbay.com")
+        valid_trans = bool(api_url == EXIMBAY_SERVICE_DOMAIN)
         
         # Exclude unnecessary parameters from being stored
         exclude_keys = {
