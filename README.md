@@ -12,54 +12,59 @@ When used, the user will be sent to Eximbay to make the payment,
 https://docs.getindico.io/en/stable/installation/plugins/
 
 - Logged in as the indico user
-    ```bash
-    su - indico
-    source ~/.venv/bin/activate
+    ```sh
+    $ su - indico
+    $ source ~/.venv/bin/activate
     ```
 
 - Stop Indico service (as root)
-    ```bash
-    systemctl stop indico-celery.service
-
-    systemctl stop indico-uwsgi.service (optional)
+    ```sh
+    $ systemctl stop indico-celery.service
     ```
 
 - Install plugin
-    ```bash
-    pip install git+https://{git_server}/indico_payment_eximbay.git
-    
-    # Installation branch for development
-    pip install git+https://<git repository url>.git@<branch>
+    ```sh
+    $ pip install git+https://{git_server}/indico_payment_eximbay.git
+    ```
+
+- Installation branch for development
+    ```sh
+    $ pip install git+https://<git repository url>.git@<branch>
+
+    or
+
+    $ git clone git+https://<git repository url>.git@<branch>
+    $ pip install -e .
     ```
 
 - Enable plugins : /opt/indico/etc/indico.conf
     ```sh
+    # Add CSP Exceptions if CSP_Enabled
+    CSP_ENABLED = True
+    CSP_SCRIPT_SOURCES = { 
+        'https://api-test.eximbay.com',
+        'https://api.eximbay.com'
+    }
+
     # Add Eximbay Plugin
     PLUGINS = {'payment_manual', 'payment_eximbay'}
     ```
 
 - Database migration
-    ```bash
-    indico db upgrade
+    ```sh
+    $ indico db upgrade
 
-    indico db --all-plugins upgrade
-    ```
-
-- Restart uWSGI service (as root) : optional
-
-  > Don't abort, sometimes takes more than a few seconds
-    ```bash
-    systemctl restart indico-uwsgi.service
+    $ indico db --all-plugins upgrade
     ```
 
 - Reload uWSGI
-    ```bash
-    touch ~/web/indico.wsgi
+    ```sh
+    $ touch ~/web/indico.wsgi
     ```
 
 - Restart Celery worker (as root)
-    ```bash
-    systemctl restart indico-celery.service
+    ```sh
+    $ systemctl restart indico-celery.service
     ```
 
 
