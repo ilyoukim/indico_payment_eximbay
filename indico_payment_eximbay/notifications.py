@@ -28,7 +28,7 @@ def notify_account_error(registration, data, to_address):
 
 
 @email_sender
-def notify_payment_error(registration, data, manager_address=None):
+def notify_payment_error(registration, data, manager_address=None, send_all=False):
     # Define the allowed keys for the notification data
     allowed_keys = {
         'order_id', 'amount', 'currency', 'access_country', 'email',
@@ -38,7 +38,10 @@ def notify_payment_error(registration, data, manager_address=None):
     }
 
     # Filter the input data to include only allowed keys
-    newdata = {key: data.get(key, '') for key in allowed_keys}
+    if send_all:
+        newdata = data.copy()
+    else:
+        newdata = {key: data.get(key, '') for key in allowed_keys}
     
     event = registration.registration_form.event
     
