@@ -170,7 +170,7 @@ class RHEximbayNotify(RHEximbayBase):
         
         manager_email = settings.get('notification_mail')
         
-        notify_payment_error(self.registration, {"recv": assert_data, "verify": res}, manager_email, send_all=True)
+        notify_payment_error(self.registration, {"received": assert_data, "verify": res}, manager_email, send_all=True)
         notify_payment_error(self.registration, assert_data)
         
         return False
