@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2024 Gyujin Kim
+## Copyright (C) 2019 - 2026 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -16,39 +16,54 @@
 ## You should have received a copy of the GNU General Public License
 ## along with Eximbay Indico EPayment Plugin;if not, see <http://www.gnu.org/licenses/>.
 
-import hashlib
-import operator
+import base64
+import json
+import requests
+from urllib.parse import urljoin
+
+from indico.core.plugins import url_for_plugin
 
 from indico_payment_eximbay import _
 
 
-# Eximbay API details
-EXIMBAY_API_SPEC = '2.3'
-EXIMBAY_API_VERSION = '230'
-EXIMBAY_PP_BASIC_URL = '/Gateway/BasicProcessor.krp'
-EXIMBAY_PP_DIRECT_URL = '/Gateway/DirectProcessor.krp'
-
 # payment provider identifier
-PROVIDER_EXIMBAY = 'eximbay'
+PROVIDER_EXIMBAY = "eximbay"
 
+
+# Eximbay API URLs
+EXIMBAY_SERVICE_DOMAIN = "https://api.eximbay.com"
+
+EXIMBAY_SDK_URL = "v2/javascriptSDK.js"
+
+EXIMBAY_PAYMENT_URL = "v1/payments/payments"
+EXIMBAY_READY_URL = "v1/payments/ready"
+EXIMBAY_CONFIRM_URL = "v1/payments/confirm"
+EXIMBAY_VERIFY_URL= "v1/payments/verify"
+EXIMBAY_RETRIEVE_URL = "v1/payments/retrieve"
+EXIMBAY_CANCEL_URL = "v1/payments/<transaction_id>/cancel"
+
+
+# https://developer.eximbay.com/eximbay/api_sdk/code-etc.html
 # Support Currency : Eximbay manual - Appendix A
-EXIMBAY_CURRENCY = {'KRW','USD','EUR','GBP','JPY','THB','SGD','RUB','HKD','CAD','AUD'}
+EXIMBAY_CURRENCY = {"KRW","USD","EUR","GBP","JPY","THB","SGD","RUB","HKD","CAD","AUD"}
 
 # Support Language : Eximbay manual - Appendix B
-EXIMBAY_LANGUAGE = {'KR','EN','CN','JP','RU','TH','TW','VN'}
+EXIMBAY_LANGUAGE = {"KR","EN","CN","JP","RU","TH","TW","VN"}
 
+
+# https://developer.eximbay.com/eximbay/api_sdk/code-organization.html
 EXIMBAY_PAYMETHOD = {
     "P000": "Credit Card",
     "P101": "VISA",
     "P102": "MasterCard",
     "P103": "AMEX",
     "P104": "JCB",
-    "P105": "CUP(UnionPay 2D)",
     "P106": "Diners",
     "P107": "Discover",
     "P108": "Mir",
+    "P109": "UnionPay",
     "P001": "PayPal",
-    "P002": "CUP(UnionPay)",
+    "P002": "CUP(UPOP)",
     "P003": "Alipay or Alipay Plus",
     "P174": "Alipay Plus(Alipay_CN)",
     "P175": "Alipay Plus(TRUEMONEY)",
@@ -60,17 +75,13 @@ EXIMBAY_PAYMETHOD = {
     "P142": "WeChat(Mobile)",
     "P143": "WeChat(POP)",
     "P144": "WeChat(MINI)",
-    "P006": "Japanese Convenience Store, Internet Banking Payment",
-    "P171": "Razer Merchant Services(Malaysia)",
-    "P172": "Razer Merchant Services(Vietnam)",
-    "P173": "Razer Merchant Services(Thailand)",
-    "P011": "YooMoney",
-    "PG01": "2C2P",
-    "P185": "GrabPay(SGD)",
-    "P189": "GrabPay(MYR)",
-    "P190": "GrabPay(PHP)",
-    "P186": "LinePay(2C2P)",
-    "P194": "LinePay(eContext)",
+    "P006": "ECONTEXT",
+    "P197": "Klarna",
+    "P350": "GrabPay(MYR)",
+    "P351": "GrabPay(SGD)",
+    "P352": "ShopeePay(THB)",
+    "P353": "JKOPAY(TWD)",
+    "P354": "PayPay",
     "P110": "BC Card",
     "P111": "KB Card",
     "P112": "HANA Card",
@@ -87,7 +98,7 @@ EXIMBAY_PAYMETHOD = {
     "P124": "GWANGJU Card",
     "P125": "KAKAOBANK",
     "P126": "KBANK",
-    "P127": "MIRAEASSET",
+    "P127": "MIRAE ASSET",
     "P128": "KONA Card",
     "P129": "TOSS Card",
     "P130": "CHAI Card",
@@ -96,7 +107,6 @@ EXIMBAY_PAYMETHOD = {
     "P303": "TOSS",
     "P304": "PAYCO",
     "P305": "Virtual Account",
-    "P306": "SMILE PAY",
     "P015": "NAVER PAY(CARD & POINT)",
     "P307": "NAVER PAY(CARD)",
     "P308": "NAVER PAY(POINT)",
@@ -104,90 +114,116 @@ EXIMBAY_PAYMETHOD = {
 
 
 def get_paymethod(code):
-    if code in EXIMBAY_PAYMETHOD:
-        return EXIMBAY_PAYMETHOD.get(code)
-    else:
-        return code
+    return str(EXIMBAY_PAYMETHOD.get(code, code))
 
-def get_fgkey(exb_secret, data):
-    """Specific function for Eximbay
-    Generate fgkey from input parameters and secretkey
-    Eximbay manual Chapter 4
-    
-    :param data: request or response params
-    :return: fgkey
+
+def get_request_header(api_key):
+    """Base64 encoding
+
+    - https://developer.eximbay.com/eximbay/payment_linkage/preparing-payment.html#apiAuthentication
     """
-    if isinstance(exb_secret, str) and len(exb_secret) == 32:
+    text = api_key + ":"
+    encoded = base64.b64encode(text.encode("utf-8")).decode("utf-8")
+
+    headers = {
+        "Authorization": "Basic " + encoded,
+        "Content-Type": "application/json"
+    }
+
+    return headers
+
+
+def _get_fgkey(api_url, api_key, data):
+    """
+    # https://developer.eximbay.com/eximbay/payment_linkage/preparing-fgkey.html
+    """
+    request_url = urljoin(api_url, EXIMBAY_READY_URL)
+
+    headers = get_request_header(api_key)
+
+    try:
+        response = requests.post(url=request_url, headers=headers, data=json.dumps(data), timeout=5)
+        response.raise_for_status()
+        recv = response.json()
+    except requests.RequestException as e:
+        raise TransactionFailure(step="ready", details=str(e))
+
+    resCode = recv.get("rescode", "").strip()
+    resMsg = recv.get("resmsg", "").strip()
+
+    if resCode == "0000" and resMsg == "Success":
+        return recv.get("fgkey", "").strip()
+    else:
+        raise TransactionFailure(step="ready", details=response.text)
+
+
+def get_transaction_params(event_settings, registration, is_kor: bool):
+    """Get parameters for creating a transaction request."""
+    api_url = event_settings.get("url")
+
+    if is_kor:
+        mid = event_settings.get("account_id", "")
+        api_key = event_settings.get("account_key", "")
+    else:
+        mid = event_settings.get("account_id2", "")
+        api_key = event_settings.get("account_key2", "")
+
+    # check API Key validation
+    if api_key and len(api_key) == 25:
         pass
     else:
-        return None
-    
-    newData = {}
-    newData.update(data)
-    
-    # remove fgkey
-    newData.pop('fgkey', None)
-    
-    # A : Make sorted query with list type
-    params = sorted(newData.items(), key=operator.itemgetter(0))
-    
-    query = "&".join( ("{}={}".format(key, value) for key, value in params) )
-    
-    # B: string concat secretkey and A with ? character
-    sp = '%s?%s' % (exb_secret, query)
+        return {}
 
-    # C: generate hashing from B and SHA256 function
-    # convert character set to UTF-8
-    fgkey = hashlib.sha256(sp.encode('utf-8')).hexdigest()
-    return fgkey.upper()
+    format_map = {
+        "user_id": registration.user_id,
+        "event_id": registration.event_id,
+        "event_title": registration.event.title,
+        "registration_form_id": registration.registration_form_id,
+        "registration_form_title": registration.registration_form.title,
+        "registration_db_id": registration.id,
+        "registration_id": registration.friendly_id,
+        "user_firstname": registration.first_name,
+        "user_lastname": registration.last_name,
+    }
+    order_description = event_settings["order_description"].format(**format_map)
+    order_identifier = event_settings["order_identifier"].format(**format_map)
 
+    # https://developer.eximbay.com/eximbay/api_list/reference.html
+    transaction_params = {
+        "merchant": {
+            "mid": mid,                                     # merchant ID
+        },
+        "payment": {
+            "transaction_type": "PAYMENT",
+            "payment_method": "P000",                       # P000: Credit Card
+            "lang": "EN",                                   # default: EN
+            "order_id": order_identifier[-30:],             # orderId : unique value (max. 30 char)
+            "currency": registration.currency,              # currency: USD, EUR, KRW ...
+            "amount": str(registration.price),              # total price > 0
+        },
+        "buyer": {
+            "name": registration.full_name,
+            "email": registration.email,
+        },
+        "product": [{
+            "name": order_description[-255:],               # product name: max 255 char
+            "unit_price": str(registration.price),          # product price > 0
+            "quantity": str(1),                             # product quantity > 0
+        }],
+        "url": {
+            "return_url": url_for_plugin("payment_eximbay.return", registration.locator.uuid, _external=True),
+            "status_url": url_for_plugin("payment_eximbay.notify", registration.locator.uuid, _external=True),
+        },
+        "settings": {
+            "display_type": "R",                            # R: redirect, P: popup
+        },
+    }
 
-def get_transdata(exb_secret, assert_data, isKOR=False):
-    """Generate eximbay transaction data
-    # see the Eximbay Manual on what these things mean
-    
-    assert_data : dict
-    
-    transdata = {
-        'charset': 'UTF-8',                 # default
-        'ver': '230',                       # eximbay version
-        'txntype': 'PAYMENT',               # message type: PAYMENT, QUERY
-        'ostype': 'P',                      # P:pc (default), M:mobile
-        'displaytype': 'P',                 # P:popup, R:page redirect
-        'paymethod': 'P000',                # P000: Credit Card, P001: PayPal, etc ...
-        'lang': display_language,           # KR, EN, CN, JP
-        'issuercountry': country,           # Required for Korea domestic credit card payment
-        'mid': exim_account_id,             # Merchant ID
-        'ref': order_identifier,            # orderId : unique value
-        'amt': registration_price,
-        'cur': registration_currency,
-        'buyer': registration_full_name,
-        'email': registration_email,
-        'item_0_product': order_description,
-        'item_0_unitPrice': registration_price,
-        'item_0_quantity': '1',
-        'returnurl': return_url,
-        'statusurl': status_post_url,       # where to asynchronously call back from Eximbay
-        }
-    """
-    
-    transdata = {
-            'charset': 'UTF-8',
-            'ver': EXIMBAY_API_VERSION,
-            'txntype': 'PAYMENT',
-            'ostype': 'P',                      # P:pc, M:mobile
-            'displaytype': 'P',                 # P:popup, R:page redirect
-            'paymethod': 'P000',                # Credit Card
-            'lang': 'EN',                       # KR, EN, CN, JP
-        }
-    
     # Korea Domestic Card
-    if isKOR:
-        transdata['lang'] = 'KR'
-        transdata['issuercountry'] = 'KR'
-    
-    transdata.update(assert_data)
-    
-    transdata['fgkey'] = get_fgkey(exb_secret, transdata)
-    
-    return transdata
+    if is_kor:
+        transaction_params["payment"]["lang"] = "KR"
+        transaction_params["settings"]["issuer_country"] = "KR"
+
+    transaction_params["fgkey"] = _get_fgkey(api_url, api_key, transaction_params)
+
+    return transaction_params

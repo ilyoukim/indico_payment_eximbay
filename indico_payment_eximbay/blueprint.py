@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 ##
 ## This file is part of the Eximbay Indico EPayment Plugin.
-## Copyright (C) 2019 - 2024 Gyujin Kim
+## Copyright (C) 2019 - 2026 Gyujin Kim
 ##
 ## This is free software; you can redistribute it and/or
 ## modify it under the terms of the GNU General Public License as
@@ -30,6 +30,7 @@ blueprint = IndicoPluginBlueprint(
 )
 
 
+# blueprint.add_url_rule('/init', 'init', RHInitEximbayPayment, methods=('GET', 'POST'))
 blueprint.add_url_rule('/return', 'return', RHEximbayReturn, methods=('GET', 'POST'))
 
 # Used by Eximbay to send an asynchronous notification for the transaction (pending, successful, etc)

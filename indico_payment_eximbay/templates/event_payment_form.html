@@ -1,30 +1,32 @@
 {% trans %}
     <p>
-        Clicking on the <strong>Pay Now</strong> button you will get redirected to the Eximbay site in order to complete your transaction.
+        By selecting the <strong>Pay Now</strong>, you will be redirected to the Eximbay payment platform to securely complete your transaction.
         <br>
-        You can only make payments for cards issued in the same country you are currently accessing.
+        Please be advised that payment is only permitted using credit or debit cards issued in the same country from which you are accessing this service.
     </p>
     <p>
-        *This payment method is provided by Eximbay and is billed as <u>www.eximbay.com</u>.
+        *<i>This payment service is provided by Eximbay, and charges will appear on your billing statement under <u>www.eximbay.com</u></i>.
     </p>
 {% endtrans %}
 
 <dl class="i-data-list">
-    <dt>{% trans %}First name{% endtrans %}</dt>
+    <dt>First name</dt>
     <dd>{{ registration.first_name }}</dd>
-    <dt>{% trans %}Last name{% endtrans %}</dt>
+    <dt>Last name</dt>
     <dd>{{ registration.last_name }}</dd>
-    <dt>{% trans %}Total amount{% endtrans %}</dt>
+    <dt>Total amount</dt>
     <dd>{{ format_currency(amount, currency, locale=session.lang) }}</dd>
     <hr>
-    <dt>{% trans %}Item Name{% endtrans %}</dt>
+    <dt>Order ID</dt>
+    <dd>{{ order_id }}</dd>
+    <dt>Item name</dt>
     <dd>{{ item_name }}</dd>
 </dl>
 
-{% if not valid_trans %}
+{% if test %}
     <hr>
     <p style="font-size:1.2em; padding-left:.5em; color:red">
-        <em>Online payments are pending agency review; transactions will not be processed.</em>
+        <em>{% trans %}Online payments are pending agency review; transactions will not be processed.{% endtrans %}</em>
     </p>
 {% endif %}
 
@@ -51,33 +53,27 @@
             <td>
                 Shinhan, Samsung, KB, BC, Hyundai, Lotte, Woori, Hana, etc
                 <br>
-                <i>For domestic payments in South Korea only</i>
+                <i>All credit cards issued in South Korea accepted.</i>
             </td>
             <td>
-                VISA, MASTER, AMEX, JCB, UnionPay
+                VISA, MASTER, AMEX, JCB, etc
             </td>
         </tr>
         <tr>
             <td>
-                {% if eximbay_korean %}
-                    <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay_korean.items() %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% endfor %}
-                        <button type="submit" class="action-button">{% trans %}Pay Now: Korean{% endtrans %}</button>
-                    </form>
+                {% if data_korean %}
+                    <button id="btn_pay_korean" class="action-button" type="button">
+                        Pay Now: Korean
+                    </button>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
             </td>
             <td>
-                {% if eximbay_global %}
-                    <form action="{{ payment_url }}" method="POST">
-                        {% for key, value in eximbay_global.items() %}
-                            <input type="hidden" name="{{ key }}" value="{{ value }}">
-                        {% endfor %}
-                        <button type="submit" class="action-button">{% trans %}Pay Now: Global{% endtrans %}</button>
-                    </form>
+                {% if data_global %}
+                    <button id="btn_pay_global" class="action-button" type="button">
+                        Pay Now: Global
+                    </button>
                 {% else %}
                     <p style="text-align:center;"><i>- Not Available -</i></p>
                 {% endif %}
@@ -85,3 +81,19 @@
         </tr>
     </tbody>
 </table>
+
+
+<script nonce="{{ get_csp_nonce() }}" src="{{eximbay_url}}/v2/javascriptSDK.js"></script>
+<script nonce="{{ get_csp_nonce() }}">
+    {% if data_korean %}
+        document.getElementById('btn_pay_korean').addEventListener('click', function() {
+            EXIMBAY.request_pay( {{ data_korean | tojson | safe }} );
+        });
+    {% endif %}
+
+    {% if data_global %}
+        document.getElementById('btn_pay_global').addEventListener('click', function() {
+            EXIMBAY.request_pay( {{ data_global | tojson | safe }} );
+        });
+    {% endif %}
+</script>

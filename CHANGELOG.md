@@ -1,6 +1,10 @@
 # Changelog
 
-## [3.2.5] 2025-09-11
+## [3.3.0] 2026-04-19
+
+- Migration to support Open API ( MID and API Key )
+
+## [3.2.6] 2025-09-11
 
 - Added support for multiple MIDs: Using two Merchant IDs (MIDs), one for Domestic credit cards and another for Global credit cards.
 
